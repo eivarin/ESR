@@ -31,11 +31,12 @@ func tcpmessage(addrr string){
 	}
 	defer conn.Close()
 	// send to server
-    fmt.Fprintf(conn, "mensagem tcp")
+	conn.Write([]byte("Hi back!\n"))
+    //fmt.Fprintf(conn, "mensagem tcp")
 }
 func main(){
-	var udpaddrr string  = os.Args[1]
+	//var udpaddrr string  = os.Args[1]
 	var tcpaddrr string = os.Args[2]
-	udpmessage(udpaddrr)
+	//udpmessage(udpaddrr)
 	tcpmessage(tcpaddrr)
 }

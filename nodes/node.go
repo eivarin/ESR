@@ -2,49 +2,39 @@ package main
 import (
 	"fmt"
 	"net"
-	"os"
-	"time"
-	"log"
+    "bufio"
+    "strings"
 	)
-func testcoonection(host string, ports string) {
-    
-        timeout := time.Second
-        conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, ports), timeout)
-        if err != nil {
-            fmt.Println("Connecting error:", err)
-        }
-        if conn != nil {
-            defer conn.Close()
-            fmt.Println("Opened", net.JoinHostPort(host, ports))
-        }
-    	
-}
-func ListenTcp(addrr string) {
-    fmt.Printf(addrr)
-    listen, err := net.Listen("tcp", addrr)
-    if err != nil {
-        log.Fatal(err)
-        os.Exit(1)
-    }
-    // close listener
-    defer listen.Close()
+func handleIncomingRequest(c net.Conn) {
     for {
-        conn, err := listen.Accept()
+
+        netData, err := bufio.NewReader(c).ReadString('\n')
         if err != nil {
-            log.Fatal(err)
-            os.Exit(1)
+                return
         }
-		fmt.Println("Connecting:", conn)
+        if strings.TrimSpace(string(netData)) == "STOP" {
+                fmt.Println("Exiting TCP server!")
+                return
+        }
+
+        fmt.Print("-> ", string(netData))
     }
 }
 func main(){
-/*
-Inicializa:
--Ficar à escuta de conexões
--Tem os vizinhos que indicamos pelos argumentos
--Tentar estabelecer conexão
-*/
-// --> Isto está confuso, explorar mais
-//ListenTcp("10.0.3.2:24")
-//testcoonection(os.Args[1],os.Args[2])
+        l, err := net.Listen("tcp", "0.0.0.0:8080")
+        if err != nil {
+                fmt.Println(err)
+                return
+        }
+        defer l.Close()
+    for{
+        c, err := l.Accept()
+        if err != nil {
+                fmt.Println(err)
+                return
+        }
+        go handleIncomingRequest(c)
+    }
 }
+
+
