@@ -1,8 +1,8 @@
 package main
 import (
 	"os"
-	stcp "server/servertcp"
-	sudp "server/serverudp"
+	stcp "main/server/servertcp"
+	sudp "main/server/serverudp"
 	)
 func main(){
 sudp.MainUdp(os.Args[1])
