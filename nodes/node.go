@@ -1,5 +1,6 @@
 package main
 import (
+	"strings"
 	"fmt"
 	"net"
         "bufio"
@@ -7,6 +8,7 @@ import (
         "os"
         "log"
         "encoding/json"
+        "strconv"
 	)
 func handleIncomingRequest(c net.Conn) {
     for {
@@ -15,7 +17,13 @@ func handleIncomingRequest(c net.Conn) {
         if err != nil {
                 return
         }
-
+        //case and handle of msg
+        switch {
+                case strings.Contains(netData,"Add node:"):
+                        ip := string(netData)[9:len(string(netData))-2]
+                        addaddrr(ip)
+        }
+        //
         fmt.Print("-> ", string(netData))
         t := time.Now()
         myTime := t.Format(time.RFC3339) + "\n"
@@ -49,10 +57,26 @@ func writelist(data []map[string]string){
         f.WriteString(string(jsonStr))
         f.Sync()
 }
-func main(){
-        //Nota de que no estado atual não conseguimos adicionar mais nós ao mapa
+func addaddrr(value string){
         var data []map[string]string = readlist()
-        data["n3"]= "10.0.2.2:8080"
+        newMap := make(map[string]string)
+        newMap["n" + strconv.Itoa(len(data)+1)] = value
+        data = append(data, newMap) 
+        writelist(data)
+}
+func main(){
+        //eventualmente ter vários ficheiros para cada nó,
+        // cada um terá a sua lista de vizinhos otherwise não faz sentido
+        var data []map[string]string = readlist()
+       
+        /*
+        Contando que cada nó tem uma lista individual:
+        -Ve se a lista têm elementos
+        -Se tiver funcionamento normal
+                -Se não tiver, manda um multicast para 
+                 todas as interfaces, recebendo respostas.
+        */
+       
         writelist(data)
         //------x------
         l, err := net.Listen("tcp", "0.0.0.0:8080")
