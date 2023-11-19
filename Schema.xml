@@ -95,7 +95,7 @@
       </services>
     </device>
     <device id="15" name="n15" type="router" class="" image="">
-      <position x="752" y="379" lat="47.57572160567164" lon="-122.12218900359514" alt="2.0"/>
+      <position x="122" y="630" lat="47.57343990127955" lon="-122.13067808303005" alt="2.0"/>
       <services>
         <service name="zebra"/>
         <service name="OSPFv2"/>
