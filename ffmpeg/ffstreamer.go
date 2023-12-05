@@ -6,6 +6,7 @@ import (
 	"log"
 	"main/ffmpeg/OS"
 	"main/ffmpeg/Shared"
+	"main/shell"
 	"net"
 	"sync"
 )
@@ -42,13 +43,12 @@ func NewFFStreamer(basePort int, logger *log.Logger, streamer_name string, rp st
 }
 
 
-func (ffs *FFStreamer) AddStream(path string) {
+func (ffs *FFStreamer) AddStream(path string, name string) {
 	ports := shared.GetPorts(ffs.basePort)
 	sdp_string := OS.Generate_SDP_From_FFMPEG(path)
 	ffs.lock.Lock()
 	defer ffs.lock.Unlock()
-	new_file_name := ffs.streamer_name + "." + path
-	ffs.instances[new_file_name] = new_streamInstance(new_file_name, path, sdp_string, ports, ffs.logger)
+	ffs.instances[name] = new_streamInstance(name, path, sdp_string, ports, ffs.logger)
 	for i := 0; i < 4; i++ {
 		go func (name string, i int)  {
 			for {
@@ -61,12 +61,12 @@ func (ffs *FFStreamer) AddStream(path string) {
 							ffs.logger.Fatal(err)
 						}
 				}
-				encoded_packet := encodeMediaPacket(MediaPacket{path, byte(i), n, buff[:n]})
+				encoded_packet := encodeMediaPacket(MediaPacket{name, byte(i), n, buff[:n]})
 				ffs.remoteCon.Write(encoded_packet)
 			}
-		}(new_file_name, i)
+		}(name, i)
 	}
-	ffs.logger.Printf("Added stream %s\n", new_file_name)
+	ffs.logger.Printf("Added stream [%s] from path: %s\n", name, path)
 }
 
 func (ffs *FFStreamer) RemoveStream(file_name string) {
@@ -120,4 +120,57 @@ func (ffs *FFStreamer) GetSDP(file_name string) (string, error) {
 	} else {
 		return "", errors.New("No stream with name " + file_name)
 	}
+}
+
+//Possible commands:
+//new <file_name> <stream_name>
+//del <stream_name>
+//get <stream_name>
+//help
+func (ffs *FFStreamer) RegisterCommands(shell *shell.Shell) {
+	shell.RegisterCommand("new", ffs.ShellAddStream)
+	shell.RegisterCommand("del", ffs.ShellRemoveStream)
+	shell.RegisterCommand("get", ffs.ShellGetSDP)
+	shell.RegisterCommand("help", ffs.ShellHelp)
+}
+
+func (ffs *FFStreamer) ShellAddStream(args []string) {
+	if len(args) != 2 {
+		ffs.logger.Println("Usage: new <file_name> <stream_name>")
+		return
+	}
+	file_name := args[0]
+	stream_name := args[1]
+	ffs.AddStream(file_name, stream_name)
+}
+
+func (ffs *FFStreamer) ShellRemoveStream(args []string) {
+	if len(args) != 1 {
+		ffs.logger.Println("Usage: del <stream_name>")
+		return
+	}
+	stream_name := args[0]
+	ffs.RemoveStream(stream_name)
+}
+
+func (ffs *FFStreamer) ShellGetSDP(args []string) {
+	if len(args) != 1 {
+		ffs.logger.Println("Usage: get <stream_name>")
+		return
+	}
+	stream_name := args[0]
+	sdp, err := ffs.GetSDP(stream_name)
+	if err != nil {
+		ffs.logger.Println(err)
+		return
+	}
+	ffs.logger.Printf("SDP for stream %s:\n%s\n", stream_name, sdp)
+}
+
+func (ffs *FFStreamer) ShellHelp(args []string) {
+	ffs.logger.Println("Possible commands:")
+	ffs.logger.Println("	new <file_name> <stream_name>")
+	ffs.logger.Println("	del <stream_name>")
+	ffs.logger.Println("	get <stream_name>")
+	ffs.logger.Println("	help")
 }

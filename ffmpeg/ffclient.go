@@ -7,8 +7,10 @@ import (
 	"log"
 	"main/ffmpeg/OS"
 	"main/ffmpeg/Shared"
+	"main/shell"
 	"net"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -28,6 +30,7 @@ type FFClient struct {
 	remoteCon *net.UDPConn
 	logger *log.Logger
 	basePort int
+	debug bool
 }
 
 func new_clientInstance(name string, SDP_string string, ports []int, logger *log.Logger, debug bool) *clientInstance {
@@ -48,11 +51,12 @@ func new_clientInstance(name string, SDP_string string, ports []int, logger *log
 	return ci
 }
 
-func NewFFClient(basePort int, logger *log.Logger) *FFClient {
+func NewFFClient(basePort int, logger *log.Logger, debug bool) *FFClient {
 	ffc := new(FFClient)
 	ffc.instances = make(map[string]*clientInstance)
 	ffc.logger = logger
 	ffc.basePort = basePort
+	ffc.debug = debug
 	remoteAddr, _ := net.ResolveUDPAddr("udp", ":"+fmt.Sprint(basePort-1))
 	conn, err := net.ListenUDP("udp", remoteAddr)
 	if err != nil {
@@ -92,7 +96,7 @@ func (ffc *FFClient) recieveUDPPackets() {
 			defer ffc.lock.RUnlock()
 			if _, ok := ffc.instances[parsed_packet.StreamName]; ok {
 				ffc.instances[parsed_packet.StreamName].localCons[parsed_packet.Type].Write(parsed_packet.Payload[:parsed_packet.PayloadSize])
-			} else {
+			} else if ffc.debug {
 				bs, _ := json.Marshal(ffc.instances)
 				fmt.Println(string(bs))
 				ffc.logger.Printf("Recieved unrequested stream: %s\n", parsed_packet.StreamName)
@@ -142,4 +146,97 @@ func write_SDP_to_file(SDP_string string, output_file string, videoPort int, aud
 	corrected_SDP := Parsed_SDP.Marshal()
 	file.WriteString(corrected_SDP)
 	file.Close()
+}
+
+//Possible commands:
+//	new <instance_name> <sdp_path> <debug:optional>
+//	del <instance_name>
+//	gen <path> <stream_name>
+// 	list
+//  help
+func (ffc *FFClient) RegisterClientCommands(shell *shell.Shell) {
+	shell.RegisterCommand("new", ffc.ShellAddInstance)
+	shell.RegisterCommand("del", ffc.ShellRemoveInstance)
+	shell.RegisterCommand("gen", ffc.ShellGenerateSDPFile)
+	shell.RegisterCommand("list", ffc.ShellListInstances)
+	shell.RegisterCommand("help", shellHelp)
+}
+
+//Possible args:
+//	<instance_name> Mandatory
+//	<sdp_path> Mandatory
+//	<debug> Optional default false
+
+func (ffc *FFClient) ShellAddInstance(args []string) {
+	debug := false
+	if len(args) < 2 {
+		ffc.logger.Println("Usage: new <instance_name> <sdp_path> <debug:optional>")
+		return
+	} else if len(args) == 3 {
+		debug, _ = strconv.ParseBool(args[2])
+	}
+
+	// Access the parsed values
+	name := args[0]
+	sdpPath := args[1]
+
+	// Read the SDP file
+	sdpBytes, err := os.ReadFile(sdpPath)
+	if err != nil {
+		ffc.logger.Println("Error reading SDP file:", err)
+		return
+	}
+	sdp := string(sdpBytes)
+
+	// Use the parsed values
+	ffc.AddInstance(name, sdp, debug)
+}
+
+//Possible args:
+//	<instance_name> Mandatory
+func (ffc *FFClient) ShellRemoveInstance(args []string) {
+	if len(args)  != 1{
+		ffc.logger.Println("Usage: del <instance_name>")
+		return
+	}
+
+	// Access the parsed values
+	name := args[0]
+
+	ffc.RemoveInstance(name)
+}
+
+//Possible args:
+//	<path> Mandatory
+// <stream_name> Mandatory
+func (ffc *FFClient) ShellGenerateSDPFile(args []string) {
+	if len(args)  != 2{
+		ffc.logger.Println("Usage: gen <path>")
+		return
+	}
+
+	// Access the parsed values
+	path := args[0]
+	sdpPath := args[1] + ".sdp"
+
+	// Generate the SDP file
+	sdp := OS.Generate_SDP_From_FFMPEG(path)
+	write_SDP_to_file(sdp, sdpPath, 5000, 5002)
+	ffc.logger.Println("SDP file written to", sdpPath)
+}
+
+func (ffc *FFClient) ShellListInstances(args []string) {
+	ffc.lock.RLock()
+	defer ffc.lock.RUnlock()
+	for name := range ffc.instances {
+		fmt.Println(name)
+	}
+}
+
+func shellHelp(args []string) {
+	fmt.Println("Possible commands:")
+	fmt.Println("	new <instance_name> <sdp_path> <debug:optional>")
+	fmt.Println("	del <instance_name>")
+	fmt.Println("	gen <path> <stream_name>")
+	fmt.Println("	help")
 }

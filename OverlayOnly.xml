@@ -1,0 +1,710 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<scenario name="/tmp/tmpvtqr814m">
+  <networks>
+    <network id="37" name="n37" icon="" canvas="1" type="SWITCH">
+      <position x="2748.96240234375" y="954.4009399414062" lat="47.570490513913015" lon="-122.09528269462756" alt="2.0"/>
+    </network>
+    <network id="38" name="n38" icon="" canvas="1" type="SWITCH">
+      <position x="3080.99658203125" y="937.9633178710938" lat="47.570639950847145" lon="-122.09080862395061" alt="2.0"/>
+    </network>
+    <network id="39" name="n39" icon="" canvas="1" type="SWITCH">
+      <position x="1461.52783203125" y="1029.3443603515625" lat="47.56980918642197" lon="-122.1126305269048" alt="2.0"/>
+    </network>
+    <network id="40" name="n40" icon="" canvas="1" type="SWITCH">
+      <position x="1712.1370849609375" y="908.7843627929688" lat="47.57090522013642" lon="-122.10925363507106" alt="2.0"/>
+    </network>
+    <network id="41" name="n41" icon="" canvas="1" type="SWITCH">
+      <position x="1406.5828857421875" y="2403.134033203125" lat="47.5573181850749" lon="-122.11337089518032" alt="2.0"/>
+    </network>
+    <network id="42" name="n42" icon="" canvas="1" type="SWITCH">
+      <position x="3237.777587890625" y="2842.459716796875" lat="47.55332304571992" lon="-122.08869604234326" alt="2.0"/>
+    </network>
+    <network id="43" name="n43" icon="" canvas="1" type="SWITCH">
+      <position x="2815.191650390625" y="2854.814208984375" lat="47.553210692050875" lon="-122.09439027344091" alt="2.0"/>
+    </network>
+    <network id="44" name="n44" icon="" canvas="1" type="SWITCH">
+      <position x="2232.415283203125" y="2851.70654296875" lat="47.55323895367053" lon="-122.10224302720893" alt="2.0"/>
+    </network>
+    <network id="45" name="n45" icon="" canvas="1" type="SWITCH">
+      <position x="4147.44921875" y="2831.324462890625" lat="47.55342431124045" lon="-122.07643846340028" alt="2.0"/>
+    </network>
+    <network id="46" name="n46" icon="" canvas="1" type="SWITCH">
+      <position x="4186.39111328125" y="1625.1971435546875" lat="47.564391839368156" lon="-122.07591373191455" alt="2.0"/>
+    </network>
+    <network id="47" name="n47" icon="" canvas="1" type="SWITCH">
+      <position x="4188.45947265625" y="2036.2008056640625" lat="47.56065476855692" lon="-122.07588586133194" alt="2.0"/>
+    </network>
+    <network id="48" name="n48" icon="" canvas="1" type="SWITCH">
+      <position x="4091.94091796875" y="956.0071411132812" lat="47.57047591166985" lon="-122.0771864227251" alt="2.0"/>
+    </network>
+  </networks>
+  <devices>
+    <device id="1" name="O7" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="1855.1925048828125" y="1211.7025146484375" lat="47.56815129040233" lon="-122.10732600201817" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="2" name="O2" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="2921.41259765625" y="1179.10791015625" lat="47.56844762575218" lon="-122.09295897493456" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="3" name="O8" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="3894.417236328125" y="1182.149169921875" lat="47.56841997606969" lon="-122.07984800085801" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="4" name="O1" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="2325.0048828125" y="1859.601318359375" lat="47.56226054065885" lon="-122.10099540742173" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="5" name="O6" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="1771.1929931640625" y="2234.310302734375" lat="47.558853353089226" lon="-122.10845787269672" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="6" name="O5" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="2243.529052734375" y="2614.8046875" lat="47.55539333276682" lon="-122.10209327217342" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="7" name="O4" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="2965.717529296875" y="2710.514404296875" lat="47.554522961842146" lon="-122.09236197797574" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="8" name="O3" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="3469.3828125" y="1844.6627197265625" lat="47.56239637109964" lon="-122.08557522464604" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="9" name="O10" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="3904.731689453125" y="2644.005859375" lat="47.55512778288181" lon="-122.07970901639465" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="10" name="O9" icon="/root/.coregui/icons/emane.png" canvas="1" type="router" class="" image="">
+      <position x="4003.7392578125" y="1853.797607421875" lat="47.562313311421306" lon="-122.07837491621615" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="11" name="RP" icon="/root/.coregui/icons/alert.png" canvas="1" type="router" class="" image="">
+      <position x="2955.727783203125" y="1868.4642333984375" lat="47.56217995370606" lon="-122.09249658709977" alt="2.0"/>
+      <configservices>
+        <service name="OSPFv3"/>
+        <service name="IPForward"/>
+        <service name="zebra"/>
+        <service name="OSPFv2"/>
+      </configservices>
+    </device>
+    <device id="12" name="C5" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1601.2330322265625" y="689.9271850585938" lat="47.572894833472624" lon="-122.11074803715569" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="13" name="C4" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1340.3739013671875" y="737.7852783203125" lat="47.57245976577985" lon="-122.11426304331948" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="14" name="C2" icon="" canvas="1" type="PC" class="" image="">
+      <position x="991.5591430664062" y="1049.065185546875" lat="47.5696298984915" lon="-122.11896322775011" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="15" name="C1" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1077.7852783203125" y="1281.04052734375" lat="47.56752089508544" lon="-122.11780135392227" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="16" name="C6" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1857.5638427734375" y="728.4356079101562" lat="47.572544761918486" lon="-122.10729404888212" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="17" name="C23" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1000.07373046875" y="2053.487060546875" lat="47.56049758660072" lon="-122.11884849599008" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="18" name="C22" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1017.8287963867188" y="2465.822265625" lat="47.55674812953588" lon="-122.1186092512838" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="19" name="C21" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1283.2530517578125" y="2742.710205078125" lat="47.554230174434096" lon="-122.11503273130317" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="20" name="C20" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1568.1990966796875" y="2895.2412109375" lat="47.55284304093812" lon="-122.11119316049364" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="21" name="C19" icon="" canvas="1" type="PC" class="" image="">
+      <position x="1922.092041015625" y="3007.900146484375" lat="47.551818484795135" lon="-122.10642454888104" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="22" name="C18" icon="" canvas="1" type="PC" class="" image="">
+      <position x="2372.7080078125" y="3099.677978515625" lat="47.55098381323415" lon="-122.1003526207274" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="23" name="C16" icon="" canvas="1" type="PC" class="" image="">
+      <position x="2752.302734375" y="3042.163330078125" lat="47.551506880548395" lon="-122.09523768455779" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="24" name="C15" icon="" canvas="1" type="PC" class="" image="">
+      <position x="2967.818603515625" y="3076.650634765625" lat="47.55119323617629" lon="-122.0923336665695" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="25" name="S3" icon="/root/.coregui/icons/host.png" canvas="1" type="PC" class="" image="">
+      <position x="3363.77294921875" y="3059.823486328125" lat="47.55134627070714" lon="-122.08699828896113" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="26" name="C17" icon="" canvas="1" type="PC" class="" image="">
+      <position x="2563.126953125" y="2836.663330078125" lat="47.55337575887717" lon="-122.097786776993" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="27" name="C13" icon="" canvas="1" type="PC" class="" image="">
+      <position x="4451.87451171875" y="2702.520263671875" lat="47.554595660004445" lon="-122.07233641499708" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="28" name="C14" icon="" canvas="1" type="PC" class="" image="">
+      <position x="4085.122314453125" y="3072.33447265625" lat="47.551232489562736" lon="-122.0772783015614" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="29" name="S2" icon="/root/.coregui/icons/host.png" canvas="1" type="PC" class="" image="">
+      <position x="4390.57958984375" y="1420.8931884765625" lat="47.56624938383419" lon="-122.07316234747448" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="30" name="C10" icon="" canvas="1" type="PC" class="" image="">
+      <position x="4509.484375" y="1731.4447021484375" lat="47.56342580381787" lon="-122.07156013768657" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="31" name="C11" icon="" canvas="1" type="PC" class="" image="">
+      <position x="4438.0986328125" y="1975.1417236328125" lat="47.56120996809391" lon="-122.0725220412357" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="32" name="C12" icon="" canvas="1" type="PC" class="" image="">
+      <position x="4293.45947265625" y="2265.786865234375" lat="47.5585671300808" lon="-122.07447101475947" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="33" name="C8" icon="" canvas="1" type="PC" class="" image="">
+      <position x="2759.658203125" y="674.8936157226562" lat="47.57303149969092" lon="-122.09513857160779" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="34" name="C9" icon="" canvas="1" type="PC" class="" image="">
+      <position x="4360.74072265625" y="856.5820922851562" lat="47.571379793723715" lon="-122.0735644181313" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="35" name="C7" icon="" canvas="1" type="PC" class="" image="">
+      <position x="2459.127197265625" y="806.9573974609375" lat="47.57183093044767" lon="-122.09918814554652" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="36" name="S1" icon="/root/.coregui/icons/host.png" canvas="1" type="PC" class="" image="">
+      <position x="3270.609375" y="748.9786376953125" lat="47.57235800882161" lon="-122.08825364290078" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+    <device id="50" name="C3" icon="" canvas="1" type="PC" class="" image="">
+      <position x="988.4960327148438" y="780.4884033203125" lat="47.57207155774986" lon="-122.1190045023328" alt="2.0"/>
+      <configservices>
+        <service name="DefaultRoute"/>
+      </configservices>
+    </device>
+  </devices>
+  <links>
+    <link node1="5" node2="6">
+      <iface1 id="0" name="eth0" ip4="10.0.0.1" ip4_mask="24" ip6="2001::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.0.2" ip4_mask="24" ip6="2001::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="5" node2="1">
+      <iface1 id="1" name="eth1" ip4="10.0.1.1" ip4_mask="24" ip6="2001:0:0:1::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.1.2" ip4_mask="24" ip6="2001:0:0:1::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="1" node2="4">
+      <iface1 id="1" name="eth1" ip4="10.0.2.1" ip4_mask="24" ip6="2001:0:0:2::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.2.2" ip4_mask="24" ip6="2001:0:0:2::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="4" node2="11">
+      <iface1 id="2" name="eth2" ip4="10.0.4.1" ip4_mask="24" ip6="2001:0:0:4::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.4.2" ip4_mask="24" ip6="2001:0:0:4::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="11" node2="7">
+      <iface1 id="1" name="eth1" ip4="10.0.5.1" ip4_mask="24" ip6="2001:0:0:5::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.5.2" ip4_mask="24" ip6="2001:0:0:5::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="7" node2="8">
+      <iface1 id="1" name="eth1" ip4="10.0.6.1" ip4_mask="24" ip6="2001:0:0:6::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.6.2" ip4_mask="24" ip6="2001:0:0:6::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="8" node2="2">
+      <iface1 id="1" name="eth1" ip4="10.0.7.1" ip4_mask="24" ip6="2001:0:0:7::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.7.2" ip4_mask="24" ip6="2001:0:0:7::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="2" node2="4">
+      <iface1 id="1" name="eth1" ip4="10.0.8.1" ip4_mask="24" ip6="2001:0:0:8::1" ip6_mask="64"/>
+      <iface2 id="3" name="eth3" ip4="10.0.8.2" ip4_mask="24" ip6="2001:0:0:8::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="4" node2="7">
+      <iface1 id="4" name="eth4" ip4="10.0.9.1" ip4_mask="24" ip6="2001:0:0:9::1" ip6_mask="64"/>
+      <iface2 id="2" name="eth2" ip4="10.0.9.2" ip4_mask="24" ip6="2001:0:0:9::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="6" node2="7">
+      <iface1 id="2" name="eth2" ip4="10.0.10.1" ip4_mask="24" ip6="2001:0:0:a::1" ip6_mask="64"/>
+      <iface2 id="3" name="eth3" ip4="10.0.10.2" ip4_mask="24" ip6="2001:0:0:a::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="7" node2="9">
+      <iface1 id="4" name="eth4" ip4="10.0.11.1" ip4_mask="24" ip6="2001:0:0:b::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.11.2" ip4_mask="24" ip6="2001:0:0:b::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="11" node2="8">
+      <iface1 id="2" name="eth2" ip4="10.0.12.1" ip4_mask="24" ip6="2001:0:0:c::1" ip6_mask="64"/>
+      <iface2 id="2" name="eth2" ip4="10.0.12.2" ip4_mask="24" ip6="2001:0:0:c::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="11" node2="2">
+      <iface1 id="3" name="eth3" ip4="10.0.13.1" ip4_mask="24" ip6="2001:0:0:d::1" ip6_mask="64"/>
+      <iface2 id="2" name="eth2" ip4="10.0.13.2" ip4_mask="24" ip6="2001:0:0:d::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="1" node2="2">
+      <iface1 id="2" name="eth2" ip4="10.0.14.1" ip4_mask="24" ip6="2001:0:0:e::1" ip6_mask="64"/>
+      <iface2 id="3" name="eth3" ip4="10.0.14.2" ip4_mask="24" ip6="2001:0:0:e::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="2" node2="3">
+      <iface1 id="4" name="eth4" ip4="10.0.15.1" ip4_mask="24" ip6="2001:0:0:f::1" ip6_mask="64"/>
+      <iface2 id="0" name="eth0" ip4="10.0.15.2" ip4_mask="24" ip6="2001:0:0:f::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="10" node2="9">
+      <iface1 id="1" name="eth1" ip4="10.0.17.1" ip4_mask="24" ip6="2001:0:0:11::1" ip6_mask="64"/>
+      <iface2 id="1" name="eth1" ip4="10.0.17.2" ip4_mask="24" ip6="2001:0:0:11::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="10" node2="3">
+      <iface1 id="2" name="eth2" ip4="10.0.18.1" ip4_mask="24" ip6="2001:0:0:12::1" ip6_mask="64"/>
+      <iface2 id="1" name="eth1" ip4="10.0.18.2" ip4_mask="24" ip6="2001:0:0:12::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="8" node2="9">
+      <iface1 id="4" name="eth4" ip4="10.0.19.1" ip4_mask="24" ip6="2001:0:0:13::1" ip6_mask="64"/>
+      <iface2 id="2" name="eth2" ip4="10.0.19.2" ip4_mask="24" ip6="2001:0:0:13::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="8" node2="3">
+      <iface1 id="5" name="eth5" ip4="10.0.20.1" ip4_mask="24" ip6="2001:0:0:14::1" ip6_mask="64"/>
+      <iface2 id="2" name="eth2" ip4="10.0.20.2" ip4_mask="24" ip6="2001:0:0:14::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="4" node2="5">
+      <iface1 id="5" name="eth5" ip4="10.0.21.1" ip4_mask="24" ip6="2001:0:0:15::1" ip6_mask="64"/>
+      <iface2 id="2" name="eth2" ip4="10.0.21.2" ip4_mask="24" ip6="2001:0:0:15::2" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="35" node2="37">
+      <iface1 id="0" name="eth0" ip4="10.0.3.20" ip4_mask="24" ip6="2001:0:0:3::14" ip6_mask="64"/>
+      <iface2 id="0" name="veth37.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="37" node2="2">
+      <iface1 id="2" name="veth37.2.1"/>
+      <iface2 id="5" name="eth5" ip4="10.0.3.1" ip4_mask="24" ip6="2001:0:0:3::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="17" node2="41">
+      <iface1 id="0" name="eth0" ip4="10.0.16.20" ip4_mask="24" ip6="2001:0:0:10::14" ip6_mask="64"/>
+      <iface2 id="0" name="veth41.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="41" node2="19">
+      <iface1 id="1" name="veth41.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.16.21" ip4_mask="24" ip6="2001:0:0:10::15" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="41" node2="20">
+      <iface1 id="2" name="veth41.2.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.16.22" ip4_mask="24" ip6="2001:0:0:10::16" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="41" node2="18">
+      <iface1 id="3" name="veth41.3.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.16.23" ip4_mask="24" ip6="2001:0:0:10::17" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="41" node2="5">
+      <iface1 id="4" name="veth41.4.1"/>
+      <iface2 id="3" name="eth3" ip4="10.0.16.1" ip4_mask="24" ip6="2001:0:0:10::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="44" node2="21">
+      <iface1 id="0" name="veth44.0.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.22.20" ip4_mask="24" ip6="2001:0:0:16::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="44" node2="22">
+      <iface1 id="1" name="veth44.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.22.21" ip4_mask="24" ip6="2001:0:0:16::15" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="6" node2="44">
+      <iface1 id="1" name="eth1" ip4="10.0.22.1" ip4_mask="24" ip6="2001:0:0:16::1" ip6_mask="64"/>
+      <iface2 id="2" name="veth44.2.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="26" node2="43">
+      <iface1 id="0" name="eth0" ip4="10.0.23.20" ip4_mask="24" ip6="2001:0:0:17::14" ip6_mask="64"/>
+      <iface2 id="0" name="veth43.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="43" node2="23">
+      <iface1 id="1" name="veth43.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.23.21" ip4_mask="24" ip6="2001:0:0:17::15" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="43" node2="24">
+      <iface1 id="2" name="veth43.2.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.23.22" ip4_mask="24" ip6="2001:0:0:17::16" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="43" node2="7">
+      <iface1 id="3" name="veth43.3.1"/>
+      <iface2 id="5" name="eth5" ip4="10.0.23.1" ip4_mask="24" ip6="2001:0:0:17::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="7" node2="42">
+      <iface1 id="6" name="eth6" ip4="10.0.24.1" ip4_mask="24" ip6="2001:0:0:18::1" ip6_mask="64"/>
+      <iface2 id="0" name="veth42.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="42" node2="25">
+      <iface1 id="1" name="veth42.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.24.20" ip4_mask="24" ip6="2001:0:0:18::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="9" node2="45">
+      <iface1 id="3" name="eth3" ip4="10.0.25.1" ip4_mask="24" ip6="2001:0:0:19::1" ip6_mask="64"/>
+      <iface2 id="0" name="veth45.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="45" node2="28">
+      <iface1 id="1" name="veth45.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.25.20" ip4_mask="24" ip6="2001:0:0:19::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="45" node2="27">
+      <iface1 id="2" name="veth45.2.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.25.21" ip4_mask="24" ip6="2001:0:0:19::15" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="10" node2="47">
+      <iface1 id="0" name="eth0" ip4="10.0.26.1" ip4_mask="24" ip6="2001:0:0:1a::1" ip6_mask="64"/>
+      <iface2 id="0" name="veth47.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="10" node2="46">
+      <iface1 id="3" name="eth3" ip4="10.0.27.1" ip4_mask="24" ip6="2001:0:0:1b::1" ip6_mask="64"/>
+      <iface2 id="0" name="veth46.0.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="46" node2="29">
+      <iface1 id="1" name="veth46.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.27.20" ip4_mask="24" ip6="2001:0:0:1b::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="46" node2="30">
+      <iface1 id="2" name="veth46.2.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.27.21" ip4_mask="24" ip6="2001:0:0:1b::15" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="47" node2="31">
+      <iface1 id="1" name="veth47.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.26.20" ip4_mask="24" ip6="2001:0:0:1a::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="47" node2="32">
+      <iface1 id="2" name="veth47.2.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.26.21" ip4_mask="24" ip6="2001:0:0:1a::15" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="48" node2="3">
+      <iface1 id="0" name="veth48.0.1"/>
+      <iface2 id="3" name="eth3" ip4="10.0.28.1" ip4_mask="24" ip6="2001:0:0:1c::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="48" node2="34">
+      <iface1 id="1" name="veth48.1.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.28.20" ip4_mask="24" ip6="2001:0:0:1c::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="38" node2="36">
+      <iface1 id="0" name="veth38.0.1"/>
+      <iface2 id="0" name="eth0" ip4="10.0.29.20" ip4_mask="24" ip6="2001:0:0:1d::14" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="38" node2="2">
+      <iface1 id="1" name="veth38.1.1"/>
+      <iface2 id="6" name="eth6" ip4="10.0.29.1" ip4_mask="24" ip6="2001:0:0:1d::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="33" node2="37">
+      <iface1 id="0" name="eth0" ip4="10.0.3.21" ip4_mask="24" ip6="2001:0:0:3::15" ip6_mask="64"/>
+      <iface2 id="1" name="veth37.1.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="40" node2="1">
+      <iface1 id="0" name="veth40.0.1"/>
+      <iface2 id="3" name="eth3" ip4="10.0.30.1" ip4_mask="24" ip6="2001:0:0:1e::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="39" node2="1">
+      <iface1 id="0" name="veth39.0.1"/>
+      <iface2 id="4" name="eth4" ip4="10.0.31.1" ip4_mask="24" ip6="2001:0:0:1f::1" ip6_mask="64"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="15" node2="39">
+      <iface1 id="0" name="eth0" ip4="10.0.31.20" ip4_mask="24" ip6="2001:0:0:1f::14" ip6_mask="64"/>
+      <iface2 id="1" name="veth39.1.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="14" node2="39">
+      <iface1 id="0" name="eth0" ip4="10.0.31.21" ip4_mask="24" ip6="2001:0:0:1f::15" ip6_mask="64"/>
+      <iface2 id="2" name="veth39.2.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="13" node2="39">
+      <iface1 id="0" name="eth0" ip4="10.0.31.22" ip4_mask="24" ip6="2001:0:0:1f::16" ip6_mask="64"/>
+      <iface2 id="3" name="veth39.3.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="12" node2="40">
+      <iface1 id="0" name="eth0" ip4="10.0.30.20" ip4_mask="24" ip6="2001:0:0:1e::14" ip6_mask="64"/>
+      <iface2 id="1" name="veth40.1.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="16" node2="40">
+      <iface1 id="0" name="eth0" ip4="10.0.30.21" ip4_mask="24" ip6="2001:0:0:1e::15" ip6_mask="64"/>
+      <iface2 id="2" name="veth40.2.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+    <link node1="50" node2="39">
+      <iface1 id="0" name="eth0" ip4="10.0.31.23" ip4_mask="24" ip6="2001:0:0:1f::17" ip6_mask="64"/>
+      <iface2 id="4" name="veth39.4.1"/>
+      <options delay="0" bandwidth="0" loss="0.0" dup="0" jitter="0" unidirectional="0" buffer="0"/>
+    </link>
+  </links>
+  <configservice_configurations>
+    <service name="OSPFv3" node="1"/>
+    <service name="IPForward" node="1"/>
+    <service name="zebra" node="1"/>
+    <service name="OSPFv2" node="1"/>
+    <service name="OSPFv3" node="2"/>
+    <service name="IPForward" node="2"/>
+    <service name="zebra" node="2"/>
+    <service name="OSPFv2" node="2"/>
+    <service name="OSPFv3" node="3"/>
+    <service name="IPForward" node="3"/>
+    <service name="zebra" node="3"/>
+    <service name="OSPFv2" node="3"/>
+    <service name="OSPFv3" node="4"/>
+    <service name="IPForward" node="4"/>
+    <service name="zebra" node="4"/>
+    <service name="OSPFv2" node="4"/>
+    <service name="OSPFv3" node="5"/>
+    <service name="IPForward" node="5"/>
+    <service name="zebra" node="5"/>
+    <service name="OSPFv2" node="5"/>
+    <service name="OSPFv3" node="6"/>
+    <service name="IPForward" node="6"/>
+    <service name="zebra" node="6"/>
+    <service name="OSPFv2" node="6"/>
+    <service name="OSPFv3" node="7"/>
+    <service name="IPForward" node="7"/>
+    <service name="zebra" node="7"/>
+    <service name="OSPFv2" node="7"/>
+    <service name="OSPFv3" node="8"/>
+    <service name="IPForward" node="8"/>
+    <service name="zebra" node="8"/>
+    <service name="OSPFv2" node="8"/>
+    <service name="OSPFv3" node="9"/>
+    <service name="IPForward" node="9"/>
+    <service name="zebra" node="9"/>
+    <service name="OSPFv2" node="9"/>
+    <service name="OSPFv3" node="10"/>
+    <service name="IPForward" node="10"/>
+    <service name="zebra" node="10"/>
+    <service name="OSPFv2" node="10"/>
+    <service name="OSPFv3" node="11"/>
+    <service name="IPForward" node="11"/>
+    <service name="zebra" node="11"/>
+    <service name="OSPFv2" node="11"/>
+    <service name="DefaultRoute" node="12"/>
+    <service name="DefaultRoute" node="13"/>
+    <service name="DefaultRoute" node="14"/>
+    <service name="DefaultRoute" node="15"/>
+    <service name="DefaultRoute" node="16"/>
+    <service name="DefaultRoute" node="17"/>
+    <service name="DefaultRoute" node="18"/>
+    <service name="DefaultRoute" node="19"/>
+    <service name="DefaultRoute" node="20"/>
+    <service name="DefaultRoute" node="21"/>
+    <service name="DefaultRoute" node="22"/>
+    <service name="DefaultRoute" node="23"/>
+    <service name="DefaultRoute" node="24"/>
+    <service name="DefaultRoute" node="25"/>
+    <service name="DefaultRoute" node="26"/>
+    <service name="DefaultRoute" node="27"/>
+    <service name="DefaultRoute" node="28"/>
+    <service name="DefaultRoute" node="29"/>
+    <service name="DefaultRoute" node="30"/>
+    <service name="DefaultRoute" node="31"/>
+    <service name="DefaultRoute" node="32"/>
+    <service name="DefaultRoute" node="33"/>
+    <service name="DefaultRoute" node="34"/>
+    <service name="DefaultRoute" node="35"/>
+    <service name="DefaultRoute" node="36"/>
+    <service name="DefaultRoute" node="50"/>
+  </configservice_configurations>
+  <session_origin lat="47.579166412353516" lon="-122.13232421875" alt="2.0" scale="150.0"/>
+  <session_options>
+    <configuration name="controlnet" value=""/>
+    <configuration name="controlnet0" value=""/>
+    <configuration name="controlnet1" value=""/>
+    <configuration name="controlnet2" value=""/>
+    <configuration name="controlnet3" value=""/>
+    <configuration name="controlnet_updown_script" value=""/>
+    <configuration name="enablerj45" value="1"/>
+    <configuration name="preservedir" value="0"/>
+    <configuration name="enablesdt" value="0"/>
+    <configuration name="sdturl" value="tcp://127.0.0.1:50000/"/>
+    <configuration name="ovs" value="0"/>
+    <configuration name="platform_id_start" value="1"/>
+    <configuration name="nem_id_start" value="1"/>
+    <configuration name="link_enabled" value="1"/>
+    <configuration name="loss_threshold" value="30"/>
+    <configuration name="link_interval" value="1"/>
+    <configuration name="link_timeout" value="4"/>
+    <configuration name="mtu" value="0"/>
+  </session_options>
+  <session_metadata>
+    <configuration name="shapes" value="[]"/>
+    <configuration name="edges" value="[]"/>
+    <configuration name="hidden" value="[]"/>
+    <configuration name="canvas" value="{&quot;gridlines&quot;: false, &quot;canvases&quot;: [{&quot;id&quot;: 1, &quot;wallpaper&quot;: null, &quot;wallpaper_style&quot;: 1, &quot;fit_image&quot;: false, &quot;dimensions&quot;: [6000, 4500]}]}"/>
+  </session_metadata>
+  <default_services>
+    <node type="mdr">
+      <service name="zebra"/>
+      <service name="OSPFv3MDR"/>
+      <service name="IPForward"/>
+    </node>
+    <node type="PC">
+      <service name="DefaultRoute"/>
+    </node>
+    <node type="prouter"/>
+    <node type="router">
+      <service name="zebra"/>
+      <service name="OSPFv2"/>
+      <service name="OSPFv3"/>
+      <service name="IPForward"/>
+    </node>
+    <node type="host">
+      <service name="DefaultRoute"/>
+      <service name="SSH"/>
+    </node>
+  </default_services>
+</scenario>
