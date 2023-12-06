@@ -5,6 +5,7 @@ import (
 	"log"
 	"main/packets"
 	"main/packets/hello"
+	"main/safesockets"
 	"net"
 	"sync"
 	"time"
@@ -16,28 +17,29 @@ const (
 	NodeServer
 	NodeRP
 )
+
 type NodeI interface {
 	JoinOverlay(rpAddr *net.TCPAddr, localAddr string, neighborsAddrs []string, neighborsRTTs map[string]time.Duration)
 	LeaveOverlay()
-	HandlePacketFromNeighbor(p *packets.OverlayPacket)
-	HandlePacketFromRP(buf []byte, conn *net.TCPConn)
+	HandlePacketFromNeighbor(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn)
+	HandlePacketFromRP(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn)
 }
 type Neighbor struct {
-	logger *log.Logger
-	Conn *net.TCPConn
+	logger   *log.Logger
+	Conn     *safesockets.SafeTCPConn
 	NodeType byte
-	RTT time.Duration
+	RTT      time.Duration
 }
 
 type Overlay struct {
-	logger *log.Logger
-	Neighbors map[string]*Neighbor
+	logger        *log.Logger
+	Neighbors     map[string]*Neighbor
 	NeighborsLock sync.RWMutex
-	rttLock *sync.Mutex
-	RPAddr string
-	basePort int
-	overlayType byte
-	LocalAddr string
+	rttLock       *sync.Mutex
+	RPAddr        string
+	basePort      int
+	overlayType   byte
+	LocalAddr     string
 }
 
 func NewOverlay(logger *log.Logger, basePort int, overlayType byte, localAddr string, neighbors []string, node NodeI) *Overlay {
@@ -92,7 +94,7 @@ func GetLocalIP() string {
 	return ""
 }
 
-func (o *Overlay) measureRTTFromClient(listenningConn net.Conn, writtingConn net.Conn) time.Duration {
+func (o *Overlay) measureRTTFromClient(listenningConn net.Conn, writtingConn net.Conn, addr string, localAddr string) time.Duration {
 	defer writtingConn.Close()
 	defer listenningConn.Close()
 
@@ -102,7 +104,7 @@ func (o *Overlay) measureRTTFromClient(listenningConn net.Conn, writtingConn net
 	writtingConn.Write([]byte("rtt"))
 	listenningConn.Read(buf)
 	rtt := time.Since(now)
-	o.logger.Println("Measured RTT: ", rtt.String())
+	o.logger.Println("Measured RTT: ", rtt.String(), "between", addr, "and", localAddr)
 	return rtt
 }
 
@@ -116,8 +118,7 @@ func (o *Overlay) measureRTTFromServer(listenningConn net.Conn, writtingConn net
 	o.rttLock.Unlock()
 }
 
-
-func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p *packets.OverlayPacket)){
+func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn)) {
 	// connect to neighbor
 	ad, _ := net.ResolveTCPAddr("tcp", addr+":"+fmt.Sprint(o.basePort+1))
 	conn, err := net.DialTCP("tcp", nil, ad)
@@ -130,7 +131,7 @@ func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p *packets.Overla
 	op := packets.NewOverlayPacket(hello.NewJoinOverlayPacket(o.overlayType, o.LocalAddr))
 	payload := op.Encode()
 	conn.Write(payload)
-	
+
 	// read hello response packet
 	buf := make([]byte, 1500)
 	nBytes, err := conn.Read(buf)
@@ -143,13 +144,13 @@ func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p *packets.Overla
 	listenningConn, _ := net.ListenUDP("udp", lad)
 	wad, _ := net.ResolveUDPAddr("udp", addr+":"+fmt.Sprint(o.basePort-4))
 	writtingConn, _ := net.DialUDP("udp", nil, wad)
-	rtt := o.measureRTTFromClient(listenningConn, writtingConn)
+	rtt := o.measureRTTFromClient(listenningConn, writtingConn, addr, o.LocalAddr)
 	o.rttLock.Unlock()
 	// decode hello response packet
 	opResp := packets.OverlayPacket{}
 	opResp.Decode(buf[:nBytes])
-	hp := opResp.InnerPacket().(*hello.JoinOverlayResponsePacket)
-	
+	hp := opResp.InnerPacket().(*hello.HelloOverlayResponsePacket)
+
 	// add neighbor to neighbors
 	neigh := NewNeighbor(conn, hp.OverlayType, o.logger)
 	neigh.RTT = rtt
@@ -162,33 +163,28 @@ func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p *packets.Overla
 
 func NewNeighbor(conn *net.TCPConn, t byte, logger *log.Logger) *Neighbor {
 	neighbor := new(Neighbor)
-	neighbor.Conn = conn
+	neighbor.Conn = safesockets.NewSafeTCPConn(conn)
 	neighbor.NodeType = t
 	neighbor.logger = logger
 	return neighbor
 }
 
-func (neigh *Neighbor) handle(handleNewPacket func(p *packets.OverlayPacket)) {
-	buf := make([]byte, 1500)
+func (neigh *Neighbor) handle(handleNewPacket func(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn)) {
 	for {
-		nBytes, err := neigh.Conn.Read(buf)
+		p, t, _, err := neigh.Conn.SafeRead()
 		if err != nil {
 			neigh.logger.Println("Error reading from neighbor", neigh.getNeighborIp(), err)
 			return
 		}
-		go func(b []byte, n int) {
-			op := packets.OverlayPacket{}
-			op.Decode(buf[:nBytes])
-			handleNewPacket(&op)
-		}(buf, nBytes)
+		go handleNewPacket(p, t, neigh.Conn)
 	}
 }
 
 func (neigh *Neighbor) getNeighborIp() string {
-	return neigh.Conn.RemoteAddr().(*net.TCPAddr).IP.String()
+	return neigh.Conn.GetRemoteAddr()
 }
 
-func (o *Overlay) listenForNewNeighbors(handleNewPacket func(p *packets.OverlayPacket)) {
+func (o *Overlay) listenForNewNeighbors(handleNewPacket func(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn)) {
 	addr, _ := net.ResolveTCPAddr("tcp", ":"+fmt.Sprint(o.basePort+1))
 	listener, _ := net.ListenTCP("tcp", addr)
 	for {
@@ -210,7 +206,7 @@ func (o *Overlay) listenForNewNeighbors(handleNewPacket func(p *packets.OverlayP
 			// decode hello packet
 			op := packets.OverlayPacket{}
 			op.Decode(buf[:nBytes])
-			hp := op.InnerPacket().(*hello.JoinOverlayPacket)
+			hp := op.InnerPacket().(*hello.HelloOverlayPacket)
 			o.rttLock.Lock()
 			lad, _ := net.ResolveUDPAddr("udp", o.LocalAddr+":"+fmt.Sprint(o.basePort-4))
 			listenningConn, _ := net.ListenUDP("udp", lad)
@@ -222,7 +218,7 @@ func (o *Overlay) listenForNewNeighbors(handleNewPacket func(p *packets.OverlayP
 			opResp := packets.NewOverlayPacket(hello.NewJoinOverlayResponsePacket(hp.OverlayType, o.RPAddr))
 			payload := opResp.Encode()
 			conn.Write(payload)
-			
+
 			// add neighbor to neighbors
 			neigh := NewNeighbor(conn, hp.OverlayType, o.logger)
 			o.NeighborsLock.Lock()

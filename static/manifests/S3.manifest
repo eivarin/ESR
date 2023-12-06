@@ -1,2 +1,2 @@
-monads ./configs/videos/monads.m4v
-tertulia ./configs/videos/tertulia.mp4
+monads ./static/videos/monads.m4v
+tertulia ./static/videos/tertulia.mp4

@@ -1,2 +1,2 @@
-dns ./configs/videos/dns.mp4
-sdp ./configs/videos/sdp.mp4
+dns ./static/videos/dns.mp4
+sdp ./static/videos/sdp.mp4

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"main/ffmpeg"
@@ -9,7 +10,10 @@ import (
 	"main/packets/getstreams"
 	"main/packets/join"
 	"main/packets/publish"
+	"main/packets/ready"
+	"main/packets/redirects"
 	"main/packets/requeststream"
+	"main/safesockets"
 	"main/shell"
 	"math"
 	"net"
@@ -21,67 +25,70 @@ import (
 )
 
 type Node struct {
-	Addr string
-	T    byte
-	conn *net.TCPConn
-	connLock *sync.Mutex
+	Addr     string
+	T        byte
+	conn    *safesockets.SafeTCPConn
 }
 
-func newNode(addr string, t byte, conn *net.TCPConn) *Node {
+func newNode(addr string, t byte, conn *safesockets.SafeTCPConn) *Node {
 	n := new(Node)
 	n.Addr = addr
 	n.T = t
 	n.conn = conn
-	n.connLock = &sync.Mutex{}
 	return n
 }
 
 type edgeNode struct {
 	Node
-	rtts    time.Duration
-	addr    string
-	streams map[string]bool
+	rtts     time.Duration
+	neighbor string
+	streams  map[string]bool
 }
 
-func newEdgeNode(addr string, t byte, conn *net.TCPConn, rtts time.Duration, neighbor string) *edgeNode {
-	n := new(edgeNode)
-	n.Addr = addr
-	n.T = t
-	n.conn = conn
-	n.rtts = rtts
-	n.addr = neighbor
-	n.streams = make(map[string]bool)
-	return n
+func newEdgeNode(addr string, t byte, conn *safesockets.SafeTCPConn, rtts time.Duration, neighbor string) *edgeNode {
+	en := new(edgeNode)
+	en.Addr = addr
+	en.T = t
+	en.conn = conn
+	en.rtts = rtts
+	en.neighbor = neighbor
+	en.streams = make(map[string]bool)
+	return en
 }
 
 type streamRequester struct {
-	node      *Node
+	node      *edgeNode
 	graphPath []string
 }
 
 type availableStream struct {
 	name       string
 	hosts      map[string]bool
+	pickedHost string
 	running    bool
 	mstree     graph.Graph[string, string]
+	mstreelock *sync.RWMutex
 	requesters map[string]*streamRequester
-	sdp 	   string
+	sdp        string
+	sdpLock   *sync.RWMutex
 }
 
-func (as *availableStream) addRequester(node *Node, graphPath []string) {
-	as.requesters[node.Addr] = &streamRequester{node, graphPath}
+func newAvailableStream(name string) *availableStream {
+	as := new(availableStream)
+	as.name = name
+	as.hosts = make(map[string]bool)
+	as.running = false
+	as.mstree = graph.New(graph.StringHash)
+	as.mstreelock = &sync.RWMutex{}
+	as.requesters = make(map[string]*streamRequester)
+	as.sdp = ""
+	as.sdpLock = &sync.RWMutex{}
+	return as
 }
 
-// func (as *availableStream) removeRequester(node *Node) {
-// 	delete(as.requesters, node.Addr)
-// }
-
-//new requester
-//client(ask for stream) -> rp(make tree) && rp(asks for sdp) -> server(sends sdp) -> rp(sends sdp) -> client(confirms opening) -> rp(confirms opening) -> server(starts sending) -> rp(starts sending) -> client(receives)
-//client(ask for stream) -> rp(remake tree) && rp(sends sdp) -> client(confirms opening) -> rp(confirms opening) -> server(starts sending) -> rp(starts sending) -> client(receives)
-
-//rp(asks for sdp) done
-//server(sends sdp) next
+func (as *availableStream) addRequester(n *edgeNode, graphPath []string) {
+	as.requesters[n.Addr] = &streamRequester{n, graphPath}
+}
 
 type OverlayRP struct {
 	logger           *log.Logger
@@ -95,8 +102,8 @@ type OverlayRP struct {
 	fullTree         graph.Graph[string, string]
 	overlayTree      graph.Graph[string, string]
 	dotLock          *sync.Mutex
-	sh 			 	 *shell.Shell
-	redirecter 	 	 *ffmpeg.FFRedirecter
+	sh               *shell.Shell
+	redirecter       *ffmpeg.FFRedirecter
 }
 
 func NewOverlayRP(logger *log.Logger, rpAddr string, sh *shell.Shell) *OverlayRP {
@@ -111,8 +118,8 @@ func NewOverlayRP(logger *log.Logger, rpAddr string, sh *shell.Shell) *OverlayRP
 	rp.redirecter = ffmpeg.NewFFRedirecter(logger, udpAddr, false)
 	rp.nodesLock = &sync.RWMutex{}
 	rp.nodes[rpAddr] = newNode(rpAddr, overlay.NodeOverlay, nil)
-	rp.fullTree = graph.New(graph.StringHash)
-	rp.overlayTree = graph.New(graph.StringHash)
+	rp.fullTree = graph.New[string, string](graph.StringHash, graph.Weighted())
+	rp.overlayTree = graph.New[string, string](graph.StringHash, graph.Weighted())
 	rp.fullTree.AddVertex(rpAddr)
 	rp.overlayTree.AddVertex(rpAddr)
 	rp.availableStreams = make(map[string]*availableStream)
@@ -122,9 +129,8 @@ func NewOverlayRP(logger *log.Logger, rpAddr string, sh *shell.Shell) *OverlayRP
 		for {
 			conn, _ := rp.rpListener.AcceptTCP()
 			go func(conn *net.TCPConn) {
-				buf := make([]byte, 1500)
-				conn.Read(buf)
-				rp.addNode(buf, conn)
+				safeConn := safesockets.NewSafeTCPConn(conn)
+				rp.addNode(safeConn)
 			}(conn)
 		}
 	}()
@@ -132,18 +138,20 @@ func NewOverlayRP(logger *log.Logger, rpAddr string, sh *shell.Shell) *OverlayRP
 	return rp
 }
 
-func (rp *OverlayRP) addNode(buf []byte, conn *net.TCPConn) {
-	p := packets.OverlayPacket{}
-	p.Decode(buf)
-	jp := p.InnerPacket().(*join.JoinOverlayRPPacket)
+func (rp *OverlayRP) addNode(conn *safesockets.SafeTCPConn) {
+	p, _, _, _ := conn.SafeRead()
+	jp := p.(*join.JoinOverlayRPPacket)
 	addr := jp.LocalAddr
-	rp.insertNode(addr, jp.OverlayType, conn, jp.NeighborsRTTs[jp.NeighborsAddrs[0]], jp.NeighborsAddrs[0])
-	resp := packets.NewOverlayPacket(join.NewJoinOverlayRPResponsePacket(true))
-	conn.Write(resp.Encode())
-	go func(con *net.TCPConn) {
+	if jp.OverlayType == overlay.NodeOverlay {
+		rp.insertOverlayNode(addr, jp.OverlayType, conn, jp.NeighborsRTTs, jp.NeighborsAddrs)
+	} else {
+		rp.insertEdgeNode(addr, jp.OverlayType, conn, jp.NeighborsRTTs[jp.NeighborsAddrs[0]], jp.NeighborsAddrs[0])
+	}
+	resp := join.NewJoinOverlayRPResponsePacket(true)
+	conn.SafeWrite(resp)
+	go func(con *safesockets.SafeTCPConn) {
 		for {
-			buf := make([]byte, 1500)
-			_, err := con.Read(buf)
+			p, t, _, err := con.SafeRead()
 			if err != nil {
 				if err == io.EOF {
 					rp.handleDisconectedNode(addr, jp.OverlayType)
@@ -152,29 +160,40 @@ func (rp *OverlayRP) addNode(buf []byte, conn *net.TCPConn) {
 				}
 				return
 			}
-			rp.HandlePacketFromRP(buf, con)
+			rp.HandlePacketFromRP(p, t, con)
 		}
 	}(conn)
 	// log added node with neighbors
-	rp.logger.Println("Added node", addr, "with neighbors", jp.NeighborsAddrs)
+	switch jp.OverlayType {
+	case overlay.NodeServer:
+		rp.logger.Println("Server", addr, "connected with neighbor", jp.NeighborsAddrs[0])
+	case overlay.NodeClient:
+		rp.logger.Println("Client", addr, "connected with neighbor", jp.NeighborsAddrs[0])
+	case overlay.NodeOverlay:
+		rp.logger.Println("Node", addr, "connected with neighbors", jp.NeighborsAddrs)
+	}
 	rp.nodesLock.RLock()
 	rp.drawGraph(rp.fullTree)
 	rp.nodesLock.RUnlock()
 }
 
-func (rp *OverlayRP) insertNode(addr string, t byte, conn *net.TCPConn, rtts time.Duration, neighbor string) {
+func (rp *OverlayRP) insertOverlayNode(name string, t byte, conn *safesockets.SafeTCPConn, rtts map[string]time.Duration, neighbors []string) {
+	rp.nodesLock.Lock()
+	rp.nodes[name] = newNode(name, t, conn)
+	rp.addVertexToGraph(rp.fullTree, name, neighbors, rtts)
+	rp.addVertexToGraph(rp.overlayTree, name, neighbors, rtts)
+	rp.nodesLock.Unlock()
+}
+
+func (rp *OverlayRP) insertEdgeNode(name string, t byte, conn *safesockets.SafeTCPConn, rtts time.Duration, neighbor string) {
 	rp.nodesLock.Lock()
 	switch t {
 	case overlay.NodeServer:
-		rp.servers[addr] = newEdgeNode(addr, overlay.NodeServer, conn, rtts, neighbor)
+		rp.servers[name] = newEdgeNode(name, t, conn, rtts, neighbor)
+		rp.addVertexToGraph(rp.fullTree, name, []string{neighbor}, map[string]time.Duration{neighbor: rtts})
 	case overlay.NodeClient:
-		rp.clients[addr] = newEdgeNode(addr, overlay.NodeClient, conn, rtts, neighbor)
-	case overlay.NodeOverlay:
-		rp.nodes[addr] = newNode(addr, overlay.NodeOverlay, conn)
-	}
-	rp.addVertexToGraph(rp.fullTree, addr, []string{neighbor}, map[string]time.Duration{neighbor: rtts})
-	if t == overlay.NodeOverlay {
-		rp.addVertexToGraph(rp.overlayTree, addr, []string{neighbor}, map[string]time.Duration{neighbor: rtts})
+		rp.clients[name] = newEdgeNode(name, t, conn, rtts, neighbor)
+		rp.addVertexToGraph(rp.fullTree, name, []string{neighbor}, map[string]time.Duration{neighbor: rtts})
 	}
 	rp.nodesLock.Unlock()
 }
@@ -191,11 +210,13 @@ func (rp *OverlayRP) handleDisconectedNode(addr string, t byte) {
 		rp.removeVertexFromGraph(rp.fullTree, addr)
 		//handle dropped streams
 	case overlay.NodeClient:
+		rp.logger.Println("Client", addr, "disconnected")
 		delete(rp.clients, addr)
 		rp.removeVertexFromGraph(rp.fullTree, addr)
 		//drop client from requesting streams
 		//drop empty streams
 	case overlay.NodeOverlay:
+		rp.logger.Println("Node", addr, "disconnected")
 		delete(rp.nodes, addr)
 		rp.removeVertexFromGraph(rp.fullTree, addr)
 		rp.removeVertexFromGraph(rp.overlayTree, addr)
@@ -204,8 +225,6 @@ func (rp *OverlayRP) handleDisconectedNode(addr string, t byte) {
 	rp.nodesLock.Unlock()
 }
 
-
-
 func (rp *OverlayRP) JoinOverlay(rpAddr *net.TCPAddr, localAddr string, neighborsAddrs []string, neighborsRTTs map[string]time.Duration) {
 }
 
@@ -213,72 +232,158 @@ func (rp *OverlayRP) LeaveOverlay() {
 
 }
 
-func (rp *OverlayRP) HandlePacketFromNeighbor(p *packets.OverlayPacket) {
+func (rp *OverlayRP) HandlePacketFromNeighbor(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
 
 }
 
-func (rp *OverlayRP) HandlePacketFromRP(buf []byte, conn *net.TCPConn) {
-	p := packets.OverlayPacket{}
-	p.Decode(buf)
-	switch p.T {
+func (rp *OverlayRP) HandlePacketFromRP(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
+	switch t {
 	case packets.OverlayPacketTypePublish:
-		publishPacket := p.InnerPacket().(*publish.PublishPacket)
+		publishPacket := p.(*publish.PublishPacket)
 		for _, streamName := range publishPacket.StreamNames {
 			if _, ok := rp.availableStreams[streamName]; !ok {
-				rp.availableStreams[streamName] = &availableStream{streamName, make(map[string]bool), false, nil, make(map[string]*streamRequester), ""}
-			} 
+				rp.availableStreams[streamName] = newAvailableStream(streamName)
+			}
 			rp.availableStreams[streamName].hosts[publishPacket.StreamerAddr] = true
 			rp.nodesLock.Lock()
 			rp.servers[publishPacket.StreamerAddr].streams[streamName] = true
 			rp.nodesLock.Unlock()
 		}
 		publishPacketResponse := publish.NewPublishResponsePacket(len(publishPacket.StreamNames))
-		rp.nodesLock.RLock()
-		rp.servers[publishPacket.StreamerAddr].conn.Write(packets.NewOverlayPacket(publishPacketResponse).Encode())
-		rp.nodesLock.RUnlock()
+		rp.writeToServer(publishPacket.StreamerAddr, publishPacketResponse)
 	case packets.OverlayPacketTypeGetStreams:
 		streamNames := make([]string, 0)
 		for streamName := range rp.availableStreams {
 			streamNames = append(streamNames, streamName)
 		}
 		getStreamsPacketResponse := getstreams.NewGetStreamsResponsePacket(streamNames)
-		conn.Write(packets.NewOverlayPacket(getStreamsPacketResponse).Encode())
+		conn.SafeWrite(getStreamsPacketResponse)
 	case packets.OverlayPacketTypeRequestStream:
-		requestPacket := p.InnerPacket().(*requeststream.RequestStreamPacket)
+		requestPacket := p.(*requeststream.RequestStreamPacket)
 		if as, ok := rp.availableStreams[requestPacket.StreamName]; !ok {
-			failure := requeststream.NewRequestStreamResponsePacket(false, requestPacket.StreamName, "",)
-			conn.Write(packets.NewOverlayPacket(failure).Encode())
+			failure := requeststream.NewRequestStreamResponsePacket(false, requestPacket.StreamName, "")
+			conn.SafeWrite(failure)
 		} else {
-			if as.running {
-				//send sdp
+			as.sdpLock.RLock()
+			if as.running{
 				success := requeststream.NewRequestStreamResponsePacket(true, requestPacket.StreamName, as.sdp)
-				conn.Write(packets.NewOverlayPacket(success).Encode())
+				as.addRequester(rp.clients[requestPacket.RequesterAddr], nil)
+				rp.generatePathsForStream(as)
+				rp.logger.Println("Sending redirects")
+				redirectsMap := make(map[string][]string)
+				for _, requester := range as.requesters {
+					for i := 1; i < len(requester.graphPath)-1; i++ {
+						if _, ok := redirectsMap[requester.graphPath[i]]; !ok {
+							redirectsMap[requester.graphPath[i]] = make([]string, 0)
+						}
+						redirectsMap[requester.graphPath[i]] = append(redirectsMap[requester.graphPath[i]], requester.graphPath[i+1])
+					}
+				}
+				for nodeAddr, reds := range redirectsMap {
+					rp.writeToNode(nodeAddr, redirects.NewRedirectsPacket(as.name, reds))
+				}
+				conn.SafeWrite(success)
+				as.sdpLock.RUnlock()
 			} else {
-				//get sdp to send
+				as.sdpLock.RUnlock()
 				requestSDP := requeststream.NewRequestStreamPacket(requestPacket.StreamName, "")
-				rp.nodesLock.Lock()
-				defer rp.nodesLock.Unlock()
+				as.sdpLock.Lock()
 				as.running = true
-				as.addRequester(&rp.clients[requestPacket.RequesterAddr].Node, nil)
-				rp.getBestServerForStream(requestPacket.StreamName).Write(packets.NewOverlayPacket(requestSDP).Encode())
+				as.addRequester(rp.clients[requestPacket.RequesterAddr], nil)
+				rp.getBestServerForStream(as).SafeWrite(requestSDP)
+				rp.generatePathsForStream(as)
 			}
+		}
+	case packets.OverlayPacketTypeRequestStreamResponse:
+		requestPacketResponse := p.(*requeststream.RequestStreamResponsePacket)
+		if !requestPacketResponse.Status {
+			rp.logger.Println("Stream", requestPacketResponse)
+			rp.logger.Println("Stream", requestPacketResponse.StreamName, "not found by Server")
+		} else if as, ok := rp.availableStreams[requestPacketResponse.StreamName]; ok {
+			as.sdp = requestPacketResponse.Sdp
+			as.sdpLock.Unlock()
+			as.mstreelock.RLock()
+			rp.configureFFRedirecterWithStream(as)
+			redirectsMap := make(map[string][]string)
+			for _, requester := range as.requesters {
+				for i := 1; i < len(requester.graphPath)-1; i++ {
+					if _, ok := redirectsMap[requester.graphPath[i]]; !ok {
+						redirectsMap[requester.graphPath[i]] = make([]string, 0)
+					}
+					redirectsMap[requester.graphPath[i]] = append(redirectsMap[requester.graphPath[i]], requester.graphPath[i+1])
+				}
+			}
+			for nodeAddr, reds := range redirectsMap {
+				rp.writeToNode(nodeAddr, redirects.NewRedirectsPacket(as.name, reds))
+			}
+			for _, requester := range as.requesters {
+				requester.node.conn.SafeWrite(requestPacketResponse)
+			}
+			as.mstreelock.RUnlock()
+		} else {
+			rp.logger.Println("Stream", requestPacketResponse.StreamName, "not found by RP")
+		}
+	case packets.OverlayPacketTypeReady:
+		readyPacket := p.(*ready.ReadyPacket)
+		if as, ok := rp.availableStreams[readyPacket.StreamName]; ok {
+			as.mstreelock.RLock()
+			rp.writeToServer(as.pickedHost, readyPacket)
+			as.mstreelock.RUnlock()
 		}
 	}
 }
 
-//fix this
-func (rp *OverlayRP) getBestServerForStream(streamName string) *net.TCPConn {
+func (rp *OverlayRP) configureFFRedirecterWithStream(as *availableStream) {
+	destinations := make(map[string]*safesockets.SafeUDPWritter)
+	for _, requester := range rp.availableStreams[as.name].requesters {
+		if _, ok := destinations[requester.node.Addr]; !ok {
+			destAddr, _ := net.ResolveUDPAddr("udp", requester.graphPath[1]+":4999")
+			conn, _ := net.DialUDP("udp", nil, destAddr)
+			destinations[requester.node.Addr] = safesockets.NewSafeUDPWritter(conn)
+		}
+	}
+	rp.redirecter.AddStream(as.name, destinations)
+}
+
+// fix this
+func (rp *OverlayRP) getBestServerForStream(as *availableStream) *safesockets.SafeTCPConn {
 	rp.nodesLock.RLock()
 	defer rp.nodesLock.RUnlock()
 	bestServer := ""
-	minRTT := time.Duration(math.MaxInt64-1)
+	minRTT := time.Duration(math.MaxInt64 - 1)
 	for serverAddr, server := range rp.servers {
-		if server.rtts < minRTT && server.streams[streamName] {
+		if server.rtts < minRTT && server.streams[as.name] {
 			bestServer = serverAddr
 			minRTT = server.rtts
 		}
 	}
+	as.pickedHost = bestServer
 	return rp.servers[bestServer].conn
+}
+
+func (rp *OverlayRP) writeToServer(serverAddr string, p packets.PacketI) {
+	rp.nodesLock.RLock()
+	defer rp.nodesLock.RUnlock()
+	if server, ok := rp.servers[serverAddr]; ok {
+		server.conn.SafeWrite(p)
+	}
+}
+
+// func (rp *OverlayRP) writeToClient(clientAddr string, p packets.PacketI) {
+// 	rp.nodesLock.RLock()
+// 	defer rp.nodesLock.RUnlock()
+// 	if client, ok := rp.clients[clientAddr]; ok {
+// 		client.conn.SafeWrite(p)
+// 	}
+// }
+
+func (rp *OverlayRP) writeToNode(nodeAddr string, p packets.PacketI) {
+	rp.nodesLock.RLock()
+	defer rp.nodesLock.RUnlock()
+	fmt.Println(nodeAddr, p)
+	if node, ok := rp.nodes[nodeAddr]; ok {
+		node.conn.SafeWrite(p)
+	}
 }
 
 func main() {

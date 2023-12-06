@@ -3,6 +3,7 @@ package publish
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 )
 
 
@@ -22,6 +23,7 @@ func (p *PublishPacket) Encode() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(p); err != nil {
+		fmt.Println("Error encoding packet")
 		panic(err)
 	}
 	return buf.Bytes()
@@ -30,6 +32,7 @@ func (p *PublishPacket) Encode() []byte {
 func (p *PublishPacket) Decode(packet []byte) {
 	dec := gob.NewDecoder(bytes.NewBuffer(packet))
 	if err := dec.Decode(p); err != nil {
+		fmt.Println("Error decoding packet")
 		panic(err)
 	}
 }
@@ -48,6 +51,7 @@ func (p *PublishResponsePacket) Encode() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(p); err != nil {
+		fmt.Println("Error encoding packet")
 		panic(err)
 	}
 	return buf.Bytes()
@@ -56,6 +60,7 @@ func (p *PublishResponsePacket) Encode() []byte {
 func (p *PublishResponsePacket) Decode(packet []byte) {
 	dec := gob.NewDecoder(bytes.NewBuffer(packet))
 	if err := dec.Decode(p); err != nil {
+		fmt.Println("Error decoding packet")
 		panic(err)
 	}
 }

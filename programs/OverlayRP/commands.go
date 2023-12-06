@@ -31,14 +31,14 @@ func (rp *OverlayRP) listStreams(args []string) {
 func (rp *OverlayRP) listServers(args []string) {
 	rp.logger.Println("Listing servers:")
 	for _, server := range rp.servers {
-		rp.logger.Printf("Server %s: %v\n", server.addr, server.streams)
+		rp.logger.Printf("Server %s: %v\n", server.neighbor, server.streams)
 	}
 }
 
 func (rp *OverlayRP) listClients(args []string) {
 	rp.logger.Println("Listing clients:")
 	for _, client := range rp.clients {
-		rp.logger.Printf("Client %s: %v\n", client.addr, client.streams)
+		rp.logger.Printf("Client %s: %v\n", client.neighbor, client.streams)
 	}
 }
 

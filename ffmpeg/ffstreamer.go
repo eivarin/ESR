@@ -12,20 +12,20 @@ import (
 )
 
 type streamInstance struct {
-	name string
+	name       string
 	sdp_string string
-	ffmpeg *OS.Streamer
-	conns []*net.UDPConn
+	ffmpeg     *OS.Streamer
+	conns      []*net.UDPConn
 }
 
 type FFStreamer struct {
 	streamer_name string
-	instances map[string]*streamInstance
-	lock sync.RWMutex
-	remoteCon *net.UDPConn
-	logger *log.Logger
-	basePort int
-	debug bool
+	instances     map[string]*streamInstance
+	lock          sync.RWMutex
+	remoteCon     *net.UDPConn
+	logger        *log.Logger
+	basePort      int
+	debug         bool
 }
 
 func NewFFStreamer(basePort int, logger *log.Logger, streamer_name string, rp string, debug bool) *FFStreamer {
@@ -42,7 +42,6 @@ func NewFFStreamer(basePort int, logger *log.Logger, streamer_name string, rp st
 	return ffs
 }
 
-
 func (ffs *FFStreamer) AddStream(path string, name string) {
 	ports := shared.GetPorts(ffs.basePort)
 	sdp_string := OS.Generate_SDP_From_FFMPEG(path)
@@ -50,16 +49,16 @@ func (ffs *FFStreamer) AddStream(path string, name string) {
 	defer ffs.lock.Unlock()
 	ffs.instances[name] = new_streamInstance(name, path, sdp_string, ports, ffs.logger)
 	for i := 0; i < 4; i++ {
-		go func (name string, i int)  {
+		go func(name string, i int) {
 			for {
 				buff := make([]byte, 2000)
 				n, _, err := ffs.instances[name].conns[i].ReadFromUDP(buff)
 				if err != nil {
 					if errors.Is(err, net.ErrClosed) {
 						break
-						} else {
-							ffs.logger.Fatal(err)
-						}
+					} else {
+						ffs.logger.Fatal(err)
+					}
 				}
 				encoded_packet := encodeMediaPacket(MediaPacket{name, byte(i), n, buff[:n]})
 				ffs.remoteCon.Write(encoded_packet)
@@ -111,22 +110,17 @@ func (streamInstance *streamInstance) stop(logger *log.Logger) {
 	}
 }
 
-
 func (ffs *FFStreamer) GetSDP(file_name string) (string, error) {
 	ffs.lock.RLock()
 	defer ffs.lock.RUnlock()
-	if _, ok := ffs.instances[file_name]; ok {
-		return ffs.instances[file_name].sdp_string, nil
-	} else {
-		return "", errors.New("No stream with name " + file_name)
-	}
+	return OS.Generate_SDP_From_FFMPEG(file_name), nil
 }
 
-//Possible commands:
-//new <file_name> <stream_name>
-//del <stream_name>
-//get <stream_name>
-//help
+// Possible commands:
+// new <file_name> <stream_name>
+// del <stream_name>
+// get <stream_name>
+// help
 func (ffs *FFStreamer) RegisterCommands(shell *shell.Shell) {
 	shell.RegisterCommand("new", ffs.ShellAddStream)
 	shell.RegisterCommand("del", ffs.ShellRemoveStream)

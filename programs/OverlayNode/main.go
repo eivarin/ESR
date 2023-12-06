@@ -7,6 +7,8 @@ import (
 	"main/overlay"
 	"main/packets"
 	"main/packets/join"
+	"main/packets/redirects"
+	"main/safesockets"
 	"main/shell"
 	"net"
 	"os"
@@ -16,7 +18,7 @@ import (
 type OverlayNode struct {
 	logger *log.Logger
 	overlay *overlay.Overlay
-	rpConn *net.TCPConn
+	rpConn *safesockets.SafeTCPConn
 	sh *shell.Shell
 	redirecter *ffmpeg.FFRedirecter
 }
@@ -34,25 +36,20 @@ func NewOverlayNode(logger *log.Logger, localAddr string, neighborsAddrs []strin
 func (n *OverlayNode) JoinOverlay(rpAddr *net.TCPAddr, localAddr string, neighborsAddrs []string, neighborsRTTs map[string]time.Duration) {
 
 	jp := join.NewJoinOverlayRPPacket(overlay.NodeOverlay, localAddr, neighborsAddrs, neighborsRTTs)
-	packet := packets.NewOverlayPacket(jp)
-	n.rpConn, _ = net.DialTCP("tcp", nil, rpAddr)
-	n.rpConn.Write(packet.Encode())
-	buf := make([]byte, 1500)
-	_, err := n.rpConn.Read(buf)
+	rpConn, _ := net.DialTCP("tcp", nil, rpAddr)
+	n.rpConn = safesockets.NewSafeTCPConn(rpConn)
+	n.rpConn.SafeWrite(jp)
+	p, _, _, err := n.rpConn.SafeRead()
 	if err != nil {
 		log.Panic("JoinOverlayRPResponsePacket failed", err)
 	}
-	
-	rPacket := packets.OverlayPacket{}
-	rPacket.Decode(buf)
-	rjoin := rPacket.InnerPacket().(*join.JoinOverlayRPResponsePacket)
+	rjoin := p.(*join.JoinOverlayRPResponsePacket)
 	if !rjoin.Success {
 		log.Panic("JoinOverlayRPResponsePacket failed")
 	}
 	go func() {
 		for {
-			buf := make([]byte, 1500)
-			_, err := n.rpConn.Read(buf)
+			p, t, _, err := n.rpConn.SafeRead()
 			if err != nil {
 				if err == io.EOF {
 					log.Fatal("RP connection closed")
@@ -60,7 +57,7 @@ func (n *OverlayNode) JoinOverlay(rpAddr *net.TCPAddr, localAddr string, neighbo
 					n.logger.Println("RP connection error", err)
 				}
 			}
-			n.HandlePacketFromRP(buf, n.rpConn)
+			n.HandlePacketFromRP(p, t, n.rpConn)
 		}
 	}()
 }
@@ -69,13 +66,23 @@ func (n *OverlayNode) LeaveOverlay() {
 	
 }
 
-func (n *OverlayNode) HandlePacketFromNeighbor(p *packets.OverlayPacket) {
+func (n *OverlayNode) HandlePacketFromNeighbor(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
 	
 }
 
-func (n *OverlayNode) HandlePacketFromRP(buf []byte, conn *net.TCPConn) {
-	p := packets.OverlayPacket{}
-	p.Decode(buf)
+func (n *OverlayNode) HandlePacketFromRP(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
+	switch t {
+	case packets.OverlayPacketTypeRedirects:
+		rp := p.(*redirects.RedirectsPacket)
+		n.logger.Println("Received RedirectsPacket", rp)
+		mappings := make(map[string]*safesockets.SafeUDPWritter)
+		for _, r := range rp.Redirects {
+			addr, _ := net.ResolveUDPAddr("udp", r+":4999")
+			conn, _ := net.DialUDP("udp", nil, addr)
+			mappings[r] = safesockets.NewSafeUDPWritter(conn)
+		}
+		n.redirecter.AddStream(rp.StreamName, mappings)
+	}
 }
 
 func main() {

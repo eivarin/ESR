@@ -1,7 +1,6 @@
 package main
 
 import (
-	"main/packets"
 	"main/packets/publish"
 	"os"
 	"strings"
@@ -48,13 +47,9 @@ func (server *OverlayServer) publishStreams() {
 	}
 
 	publishPacket := publish.NewPublishPacket(server.localAddr, streamNames)
-	packet := packets.NewOverlayPacket(publishPacket)
-	server.rpConn.Write(packet.Encode())
-	buf := make([]byte, 1500)
-	server.rpConn.Read(buf)
-	rPacket := packets.OverlayPacket{}
-	rPacket.Decode(buf)
-	rPublish := rPacket.InnerPacket().(*publish.PublishResponsePacket)
+	server.rpConn.SafeWrite(publishPacket)
+	p, _, _, _ := server.rpConn.SafeRead()
+	rPublish := p.(*publish.PublishResponsePacket)
 	if rPublish.NumberOfStreamsOk != len(streamNames) {
 		server.logger.Println("Publish failed")
 		panic("Publish failed")

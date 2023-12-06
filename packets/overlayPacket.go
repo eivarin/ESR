@@ -3,10 +3,13 @@ package packets
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"main/packets/getstreams"
 	"main/packets/hello"
 	"main/packets/join"
 	"main/packets/publish"
+	"main/packets/ready"
+	"main/packets/redirects"
 	"main/packets/requeststream"
 )
 
@@ -21,6 +24,10 @@ const (
 	OverlayPacketTypeRequestStreamResponse
 	OverlayPacketTypeGetStreams
 	OverlayPacketTypeGetStreamsResponse
+	OverlayPacketTypeRedirects
+	OverlayPacketTypeRedirectsResponse
+	OverlayPacketTypeReady
+	OverlayPacketTypeReadyResponse
 )
 
 type PacketI interface {
@@ -36,9 +43,9 @@ type OverlayPacket struct {
 func NewOverlayPacket(d PacketI) *OverlayPacket {
 	p := OverlayPacket{}
 	switch d.(type) {
-	case *hello.JoinOverlayPacket:
+	case *hello.HelloOverlayPacket:
 		p.T = OverlayPacketTypeHello
-	case *hello.JoinOverlayResponsePacket:
+	case *hello.HelloOverlayResponsePacket:
 		p.T = OverlayPacketTypeHelloResponse
 	case *join.JoinOverlayRPPacket:
 		p.T = OverlayPacketTypeJoin
@@ -56,6 +63,14 @@ func NewOverlayPacket(d PacketI) *OverlayPacket {
 		p.T = OverlayPacketTypeGetStreams
 	case *getstreams.GetStreamsResponsePacket:
 		p.T = OverlayPacketTypeGetStreamsResponse
+	case *redirects.RedirectsPacket:
+		p.T = OverlayPacketTypeRedirects
+	case *redirects.RedirectsResponsePacket:
+		p.T = OverlayPacketTypeRedirectsResponse
+	case *ready.ReadyPacket:
+		p.T = OverlayPacketTypeReady
+	case *ready.ReadyResponsePacket:
+		p.T = OverlayPacketTypeReadyResponse
 	}
 	p.D = d.Encode()
 	return &p
@@ -65,6 +80,7 @@ func (p *OverlayPacket) Encode() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(p); err != nil {
+		fmt.Println("Error encoding packet")
 		panic(err)
 	}
 	return buf.Bytes()
@@ -73,54 +89,45 @@ func (p *OverlayPacket) Encode() []byte {
 func (p *OverlayPacket) Decode(packet []byte) {
 	dec := gob.NewDecoder(bytes.NewBuffer(packet))
 	if err := dec.Decode(p); err != nil {
+		fmt.Println("Error decoding packet")
 		panic(err)
 	}
 }
 
 func (p *OverlayPacket) InnerPacket() PacketI {
+	var packet PacketI
 	switch p.T {
 	case OverlayPacketTypeHello:
-		hp := hello.JoinOverlayPacket{}
-		hp.Decode(p.D)
-		return &hp
+		packet = new(hello.HelloOverlayPacket)
 	case OverlayPacketTypeHelloResponse:
-		hp := hello.JoinOverlayResponsePacket{}
-		hp.Decode(p.D)
-		return &hp
+		packet = new(hello.HelloOverlayResponsePacket)
 	case OverlayPacketTypeJoin:
-		jp := join.JoinOverlayRPPacket{}
-		jp.Decode(p.D)
-		return &jp
+		packet = new(join.JoinOverlayRPPacket)
 	case OverlayPacketTypeJoinResponse:
-		jp := join.JoinOverlayRPResponsePacket{}
-		jp.Decode(p.D)
-		return &jp
+		packet = new(join.JoinOverlayRPResponsePacket)
 	case OverlayPacketTypePublish:
-		pp := publish.PublishPacket{}
-		pp.Decode(p.D)
-		return &pp
+		packet = new(publish.PublishPacket)
 	case OverlayPacketTypePublishResponse:
-		pp := publish.PublishResponsePacket{}
-		pp.Decode(p.D)
-		return &pp
+		packet = new(publish.PublishResponsePacket)
 	case OverlayPacketTypeRequestStream:
-		rp := requeststream.RequestStreamPacket{}
-		rp.Decode(p.D)
-		return &rp
+		packet = new(requeststream.RequestStreamPacket)
 	case OverlayPacketTypeRequestStreamResponse:
-		rp := requeststream.RequestStreamResponsePacket{}
-		rp.Decode(p.D)
-		return &rp
+		packet = new(requeststream.RequestStreamResponsePacket)
 	case OverlayPacketTypeGetStreams:
-		gsp := getstreams.GetStreamsPacket{}
-		gsp.Decode(p.D)
-		return &gsp
+		packet = new(getstreams.GetStreamsPacket)
 	case OverlayPacketTypeGetStreamsResponse:
-		gsp := getstreams.GetStreamsResponsePacket{}
-		gsp.Decode(p.D)
-		return &gsp
+		packet = new(getstreams.GetStreamsResponsePacket)
+	case OverlayPacketTypeRedirects:
+		packet = new(redirects.RedirectsPacket)
+	case OverlayPacketTypeRedirectsResponse:
+		packet = new(redirects.RedirectsResponsePacket)
+	case OverlayPacketTypeReady:
+		packet = new(ready.ReadyPacket)
+	case OverlayPacketTypeReadyResponse:
+		packet = new(ready.ReadyResponsePacket)
 	}
-	return nil
+	packet.Decode(p.D)
+	return packet
 }
 
 func (p *OverlayPacket) Type() byte {

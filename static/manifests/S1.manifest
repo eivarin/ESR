@@ -1,4 +1,4 @@
-monads ./configs/videos/monads.m4v
-tertulia ./configs/videos/tertulia.mp4
-dns ./configs/videos/dns.mp4
-sdp ./configs/videos/sdp.mp4
+monads ./static/videos/monads.m4v
+tertulia ./static/videos/tertulia.mp4
+dns ./static/videos/dns.mp4
+sdp ./static/videos/sdp.mp4

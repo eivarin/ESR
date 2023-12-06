@@ -8,7 +8,9 @@ import (
 	"main/packets"
 	"main/packets/getstreams"
 	"main/packets/join"
+	"main/packets/ready"
 	"main/packets/requeststream"
+	"main/safesockets"
 	"main/shell"
 	"net"
 	"os"
@@ -18,7 +20,7 @@ import (
 type OverlayClient struct {
 	logger   *log.Logger
 	overlay  *overlay.Overlay
-	rpConn   *net.TCPConn
+	rpConn   *safesockets.SafeTCPConn
 	ffplayer *ffmpeg.FFClient
 	streams  map[string]bool
 	sh       *shell.Shell
@@ -36,26 +38,28 @@ func NewOverlayClient(logger *log.Logger, localAddr string, neighborsAddrs []str
 
 func (c *OverlayClient) JoinOverlay(rpAddr *net.TCPAddr, localAddr string, neighborsAddrs []string, neighborsRTTs map[string]time.Duration) {
 	jp := join.NewJoinOverlayRPPacket(overlay.NodeClient, localAddr, neighborsAddrs, neighborsRTTs)
-	packet := packets.NewOverlayPacket(jp)
-	c.rpConn, _ = net.DialTCP("tcp", nil, rpAddr)
-	c.rpConn.Write(packet.Encode())
-	buf := make([]byte, 1500)
-	_, err := c.rpConn.Read(buf)
+	rpConn, _ := net.DialTCP("tcp", nil, rpAddr)
+	c.rpConn = safesockets.NewSafeTCPConn(rpConn)
+	c.rpConn.SafeWrite(jp)
+	p, _, _, err := c.rpConn.SafeRead()
 	if err != nil {
 		log.Panic("JoinOverlayRPResponsePacket failed", err)
 	}
+	rjoin := p.(*join.JoinOverlayRPResponsePacket)
+	if !rjoin.Success {
+		log.Panic("JoinOverlayRPResponsePacket failed")
+	}
 	go func() {
 		for {
-			buf := make([]byte, 1500)
-			_, err := c.rpConn.Read(buf)
+			p, t, _, err := c.rpConn.SafeRead()
 			if err != nil {
 				if err == io.EOF {
-					log.Fatal("\nRP connection closed")
+					log.Fatal("RP connection closed")
 				} else {
 					c.logger.Println("RP connection error", err)
 				}
 			}
-			c.HandlePacketFromRP(buf, c.rpConn)
+			c.HandlePacketFromRP(p, t, c.rpConn)
 		}
 	}()
 }
@@ -64,16 +68,14 @@ func (c *OverlayClient) LeaveOverlay() {
 
 }
 
-func (c *OverlayClient) HandlePacketFromNeighbor(p *packets.OverlayPacket) {
+func (c *OverlayClient) HandlePacketFromNeighbor(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
 
 }
 
-func (c *OverlayClient) HandlePacketFromRP(buf []byte, conn *net.TCPConn) {
-	p := packets.OverlayPacket{}
-	p.Decode(buf)
-	switch p.Type() {
+func (c *OverlayClient) HandlePacketFromRP(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
+	switch t {
 	case packets.OverlayPacketTypeGetStreamsResponse:
-		gsp, _ := p.InnerPacket().(*getstreams.GetStreamsResponsePacket)
+		gsp, _ := p.(*getstreams.GetStreamsResponsePacket)
 		c.streams = make(map[string]bool)
 		for _, stream := range gsp.StreamNames {
 			c.streams[stream] = true
@@ -81,13 +83,15 @@ func (c *OverlayClient) HandlePacketFromRP(buf []byte, conn *net.TCPConn) {
 		}
 		c.sh.Lock.Unlock()
 	case packets.OverlayPacketTypeRequestStreamResponse:
-		rsp, _ := p.InnerPacket().(*requeststream.RequestStreamResponsePacket)
+		rsp, _ := p.(*requeststream.RequestStreamResponsePacket)
+		c.logger.Println(rsp)
 		if !rsp.Status {
 			c.logger.Printf("Stream %s not found \n", rsp.StreamName)
 		} else {
-			c.ffplayer.AddInstance(rsp.StreamName, rsp.Sdp, false)
+			c.ffplayer.AddInstance(rsp.StreamName, rsp.Sdp, true)
 			c.logger.Printf("Playing %s \n", rsp.StreamName)
-			//send confirmation to rp
+			readyP := ready.NewReadyPacket(rsp.StreamName)
+			c.rpConn.SafeWrite(readyP)
 		}
 		c.sh.Lock.Unlock()
 	}
@@ -95,7 +99,12 @@ func (c *OverlayClient) HandlePacketFromRP(buf []byte, conn *net.TCPConn) {
 
 func (c *OverlayClient) requestStreamsFromServer() {
 	packet := getstreams.NewGetStreamsPacket(true)
-	c.rpConn.Write(packets.NewOverlayPacket(packet).Encode())
+	c.rpConn.SafeWrite(packet)
+}
+
+func (c *OverlayClient) requestSdpFromRP(streamName string) {
+	packet := requeststream.NewRequestStreamPacket(streamName, c.overlay.LocalAddr)
+	c.rpConn.SafeWrite(packet)
 }
 
 func main() {

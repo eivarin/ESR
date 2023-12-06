@@ -3,6 +3,7 @@ package join
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
 	"time"
 )
 
@@ -26,6 +27,7 @@ func (p *JoinOverlayRPPacket) Encode() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(p); err != nil {
+		fmt.Println("Error encoding packet")
 		panic(err)
 	}
 	return buf.Bytes()
@@ -34,6 +36,7 @@ func (p *JoinOverlayRPPacket) Encode() []byte {
 func (p *JoinOverlayRPPacket) Decode(packet []byte) {
 	dec := gob.NewDecoder(bytes.NewBuffer(packet))
 	if err := dec.Decode(p); err != nil {
+		fmt.Println("Error decoding packet")
 		panic(err)
 	}
 }
@@ -52,6 +55,7 @@ func (p *JoinOverlayRPResponsePacket) Encode() []byte {
 	buf := bytes.Buffer{}
 	enc := gob.NewEncoder(&buf)
 	if err := enc.Encode(p); err != nil {
+		fmt.Println("Error encoding packet")
 		panic(err)
 	}
 	return buf.Bytes()
@@ -60,6 +64,7 @@ func (p *JoinOverlayRPResponsePacket) Encode() []byte {
 func (p *JoinOverlayRPResponsePacket) Decode(packet []byte) {
 	dec := gob.NewDecoder(bytes.NewBuffer(packet))
 	if err := dec.Decode(p); err != nil {
+		fmt.Println("Error decoding packet")
 		panic(err)
 	}
 }

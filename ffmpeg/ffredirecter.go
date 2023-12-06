@@ -4,17 +4,18 @@ import (
 	"log"
 	"net"
 	"sync"
+	"main/safesockets"
 )
 
 
 
 type stream struct {
 	Name string
-	destinyConns map[string]*net.UDPConn
+	destinyConns map[string]*safesockets.SafeUDPWritter
 	writtingLock *sync.Mutex
 }
 
-func newStream(name string, destinyConns map[string]*net.UDPConn) *stream {
+func newStream(name string, destinyConns map[string]*safesockets.SafeUDPWritter) *stream {
 	s := new(stream)
 	s.Name = name
 	s.destinyConns = destinyConns
@@ -24,7 +25,7 @@ func newStream(name string, destinyConns map[string]*net.UDPConn) *stream {
 
 type FFRedirecter struct {
 	logger *log.Logger
-	recConn *net.UDPConn
+	recConn *safesockets.SafeUDPReader
 	streams map[string]*stream
 	streamsLock *sync.RWMutex
 	debug bool
@@ -36,24 +37,25 @@ func NewFFRedirecter(logger *log.Logger, listeningUdpAddr *net.UDPAddr, debug bo
 	ffr.logger = logger
 	recConn, err := net.ListenUDP("udp", listeningUdpAddr)
 	if err != nil {
+		logger.Println("Error listening UDP", err)
 		log.Panic(err)
 	}
-	ffr.recConn = recConn
+	ffr.recConn = safesockets.NewSafeUDPReader(recConn)
 	ffr.streams = make(map[string]*stream)
 	ffr.streamsLock = new(sync.RWMutex)
 	go func() {
 		for {
-			buf := make([]byte, 1500)
-			n, err := ffr.recConn.Read(buf)
+			buf, n, err := ffr.recConn.SafeRead()
 			if err != nil {
-				log.Panic(err)
+				logger.Println(err)
 			}
 			mPacket := decodeMediaPacket(buf[:n])
 			ffr.streamsLock.RLock()
 			if s, ok := ffr.streams[mPacket.StreamName]; ok {
 				s.writtingLock.Lock()
+				// ffr.logger.Println(mPacket.StreamName, s.destinyConns)
 				for _, conn := range s.destinyConns {
-					conn.Write(buf)
+					conn.SafeWrite(buf)
 				}
 				s.writtingLock.Unlock()
 			} else if ffr.debug {
@@ -65,7 +67,7 @@ func NewFFRedirecter(logger *log.Logger, listeningUdpAddr *net.UDPAddr, debug bo
 	return ffr
 }
 
-func (ffr *FFRedirecter) AddStream(name string, destinyConns map[string]*net.UDPConn) {
+func (ffr *FFRedirecter) AddStream(name string, destinyConns map[string]*safesockets.SafeUDPWritter) {
 	ffr.streamsLock.Lock()
 	defer ffr.streamsLock.Unlock()
 	s, ok := ffr.streams[name]
