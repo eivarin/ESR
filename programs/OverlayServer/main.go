@@ -7,8 +7,10 @@ import (
 	"main/overlay"
 	"main/packets"
 	"main/packets/join"
-	"main/packets/ready"
+	"main/packets/nolonguer"
 	"main/packets/requeststream"
+	"main/packets/rtt"
+	"main/packets/startstream"
 	"main/safesockets"
 	"main/shell"
 	"net"
@@ -17,13 +19,13 @@ import (
 )
 
 type OverlayServer struct {
-	logger *log.Logger
-	overlay *overlay.Overlay
-	rpConn *safesockets.SafeTCPConn
-	ffstreamer *ffmpeg.FFStreamer
+	logger           *log.Logger
+	overlay          *overlay.Overlay
+	rpConn           *safesockets.SafeTCPConn
+	ffstreamer       *ffmpeg.FFStreamer
 	availableStreams map[string]*availableStream
-	localAddr string
-	sh *shell.Shell
+	localAddr        string
+	sh               *shell.Shell
 }
 
 func NewOverlayServer(logger *log.Logger, localAddr string, neighborsAddrs []string, manifestPath string, sh *shell.Shell) *OverlayServer {
@@ -33,7 +35,7 @@ func NewOverlayServer(logger *log.Logger, localAddr string, neighborsAddrs []str
 	oServer.localAddr = localAddr
 	oServer.availableStreams = make(map[string]*availableStream)
 	oServer.populateFromManifest(manifestPath)
-	oServer.overlay = overlay.NewOverlay(logger,  5000, overlay.NodeServer, localAddr, neighborsAddrs, oServer)
+	oServer.overlay = overlay.NewOverlay(logger, 5000, overlay.NodeServer, localAddr, neighborsAddrs, oServer)
 	oServer.ffstreamer = ffmpeg.NewFFStreamer(5000, logger, localAddr, oServer.overlay.RPAddr, false)
 	return oServer
 }
@@ -48,7 +50,7 @@ func (server *OverlayServer) JoinOverlay(rpAddr *net.TCPAddr, localAddr string, 
 	if err != nil {
 		log.Panic("JoinOverlayRPResponsePacket failed", err)
 	}
-	
+
 	rjoin := p.(*join.JoinOverlayRPResponsePacket)
 	if !rjoin.Success {
 		log.Panic("JoinOverlayRPResponsePacket failed")
@@ -70,31 +72,54 @@ func (server *OverlayServer) JoinOverlay(rpAddr *net.TCPAddr, localAddr string, 
 }
 
 func (s *OverlayServer) LeaveOverlay() {
-	
+
 }
 
 func (s *OverlayServer) HandlePacketFromNeighbor(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
-	
+
 }
 
 func (s *OverlayServer) HandlePacketFromRP(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn) {
+	s.logger.Println("Received packet from RP with type", t)
 	switch t {
 	case packets.OverlayPacketTypeRequestStream:
 		rsp := p.(*requeststream.RequestStreamPacket)
 		s.logger.Println("Requesting stream", s.availableStreams[rsp.StreamName].Path)
 		sdp, _ := s.ffstreamer.GetSDP(s.availableStreams[rsp.StreamName].Path)
 		resp := requeststream.NewRequestStreamResponsePacket(true, rsp.StreamName, sdp)
-		s.logger.Println(resp)
 		conn.SafeWrite(resp)
-	case packets.OverlayPacketTypeReady:
-		ready := p.(*ready.ReadyPacket)
-		s.logger.Println("Starting stream", ready.StreamName)
-		s.availableStreams[ready.StreamName].Running = true
-		s.ffstreamer.AddStream(s.availableStreams[ready.StreamName].Path, ready.StreamName)
-	}
-	
-}
+	case packets.OverlayPacketTypeStartStream:
+		ssp := p.(*startstream.StartStreamPacket)
+		s.logger.Println("Starting stream", ssp.StreamName)
+		s.availableStreams[ssp.StreamName].Running = true
+		s.ffstreamer.AddStream(s.availableStreams[ssp.StreamName].Path, ssp.StreamName, ssp.StartTimeSeconds)
+	case packets.OverlayPacketTypeRtt:
+		rttP := p.(*rtt.RttPacket)
+		s.logger.Println("RTT request from RF: ", rttP.SenderAddr)
+		s.overlay.RttLock.Lock()
+		lad, _ := net.ResolveUDPAddr("udp", s.localAddr+":4994")
+		lConn, _ := net.ListenUDP("udp", lad)
+		rad, _ := net.ResolveUDPAddr("udp", rttP.SenderAddr+":4994")
+		rConn, _ := net.DialUDP("udp", nil, rad)
 
+		go func() {
+			buf := make([]byte, 10)
+			lConn.Read(buf)
+			rConn.Write([]byte("rtt"))
+			s.overlay.RttLock.Unlock()
+			rConn.Close()
+			lConn.Close()
+		}()
+		respRtt := rtt.NewRttResponsePacket(s.localAddr)
+		conn.SafeWrite(respRtt)
+	case packets.OverlayPacketTypeNoLonguerInterested:
+		nli := p.(*nolonguer.NoLonguerInterestedPacket)
+		s.logger.Println("No longuer interested in stream", nli.StreamName)
+		s.availableStreams[nli.StreamName].Running = false
+		s.logger.Println("Stopping stream", nli.StreamName)
+		s.ffstreamer.RemoveStream(nli.StreamName)
+	}
+}
 
 func main() {
 	Neighbors, name := shell.GetRealArgs("File path with Server Configs", "Name of the config to read from static/configs/S${NAME}.conf")

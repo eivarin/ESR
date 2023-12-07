@@ -8,6 +8,7 @@ import (
 	"main/packets"
 	"main/packets/getstreams"
 	"main/packets/join"
+	"main/packets/nolonguer"
 	"main/packets/ready"
 	"main/packets/requeststream"
 	"main/safesockets"
@@ -84,16 +85,19 @@ func (c *OverlayClient) HandlePacketFromRP(p packets.PacketI, t byte, conn *safe
 		c.sh.Lock.Unlock()
 	case packets.OverlayPacketTypeRequestStreamResponse:
 		rsp, _ := p.(*requeststream.RequestStreamResponsePacket)
-		c.logger.Println(rsp)
 		if !rsp.Status {
 			c.logger.Printf("Stream %s not found \n", rsp.StreamName)
 		} else {
-			c.ffplayer.AddInstance(rsp.StreamName, rsp.Sdp, true)
+			c.ffplayer.AddInstance(rsp.StreamName, rsp.Sdp, false)
 			c.logger.Printf("Playing %s \n", rsp.StreamName)
 			readyP := ready.NewReadyPacket(rsp.StreamName)
 			c.rpConn.SafeWrite(readyP)
 		}
 		c.sh.Lock.Unlock()
+	case packets.OverlayPacketTypeNoLonguerAvailable:
+		nla := p.(*nolonguer.NoLonguerAvailablePacket)
+		c.logger.Printf("Stream %s no longuer available \n", nla.StreamName)
+		c.ffplayer.RemoveInstance(nla.StreamName)
 	}
 }
 
@@ -104,6 +108,11 @@ func (c *OverlayClient) requestStreamsFromServer() {
 
 func (c *OverlayClient) requestSdpFromRP(streamName string) {
 	packet := requeststream.NewRequestStreamPacket(streamName, c.overlay.LocalAddr)
+	c.rpConn.SafeWrite(packet)
+}
+
+func (c *OverlayClient) noLonguerInterested(streamName string) {
+	packet := nolonguer.NewNoLonguerInterestedPacket(streamName, c.overlay.LocalAddr)
 	c.rpConn.SafeWrite(packet)
 }
 

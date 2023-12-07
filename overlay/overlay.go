@@ -2,6 +2,7 @@ package overlay
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"main/packets"
 	"main/packets/hello"
@@ -35,7 +36,7 @@ type Overlay struct {
 	logger        *log.Logger
 	Neighbors     map[string]*Neighbor
 	NeighborsLock sync.RWMutex
-	rttLock       *sync.Mutex
+	RttLock       *sync.Mutex
 	RPAddr        string
 	basePort      int
 	overlayType   byte
@@ -48,7 +49,7 @@ func NewOverlay(logger *log.Logger, basePort int, overlayType byte, localAddr st
 	overlay.Neighbors = make(map[string]*Neighbor)
 	overlay.basePort = basePort
 	overlay.overlayType = overlayType
-	overlay.rttLock = &sync.Mutex{}
+	overlay.RttLock = &sync.Mutex{}
 	overlay.LocalAddr = localAddr
 	for _, neighbor := range neighbors {
 		overlay.hiNeighbor(neighbor, node.HandlePacketFromNeighbor)
@@ -73,7 +74,7 @@ func NewOverlayRP(logger *log.Logger, basePort int, rpAddr string, node NodeI) *
 	overlay.overlayType = NodeRP
 	overlay.RPAddr = rpAddr
 	overlay.LocalAddr = rpAddr
-	overlay.rttLock = &sync.Mutex{}
+	overlay.RttLock = &sync.Mutex{}
 	go overlay.listenForNewNeighbors(node.HandlePacketFromNeighbor)
 	return overlay
 }
@@ -115,7 +116,7 @@ func (o *Overlay) measureRTTFromServer(listenningConn net.Conn, writtingConn net
 	buf := make([]byte, 10)
 	listenningConn.Read(buf)
 	writtingConn.Write([]byte("rtt"))
-	o.rttLock.Unlock()
+	o.RttLock.Unlock()
 }
 
 func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p packets.PacketI, t byte, conn *safesockets.SafeTCPConn)) {
@@ -136,16 +137,20 @@ func (o *Overlay) hiNeighbor(addr string, handleNewPacket func(p packets.PacketI
 	buf := make([]byte, 1500)
 	nBytes, err := conn.Read(buf)
 	if err != nil {
+		if err == io.EOF {
+			o.logger.Println("Neighbor", addr, "closed connection")
+			return
+		}
 		o.logger.Println("Error reading from neighbor", addr, err)
 		return
 	}
-	o.rttLock.Lock()
+	o.RttLock.Lock()
 	lad, _ := net.ResolveUDPAddr("udp", o.LocalAddr+":"+fmt.Sprint(o.basePort-4))
 	listenningConn, _ := net.ListenUDP("udp", lad)
 	wad, _ := net.ResolveUDPAddr("udp", addr+":"+fmt.Sprint(o.basePort-4))
 	writtingConn, _ := net.DialUDP("udp", nil, wad)
 	rtt := o.measureRTTFromClient(listenningConn, writtingConn, addr, o.LocalAddr)
-	o.rttLock.Unlock()
+	o.RttLock.Unlock()
 	// decode hello response packet
 	opResp := packets.OverlayPacket{}
 	opResp.Decode(buf[:nBytes])
@@ -173,8 +178,12 @@ func (neigh *Neighbor) handle(handleNewPacket func(p packets.PacketI, t byte, co
 	for {
 		p, t, _, err := neigh.Conn.SafeRead()
 		if err != nil {
+			if err == io.EOF {
+				neigh.logger.Println("Neighbor", neigh.getNeighborIp(), "closed connection")
+				return
+			}
 			neigh.logger.Println("Error reading from neighbor", neigh.getNeighborIp(), err)
-			return
+			continue
 		}
 		go handleNewPacket(p, t, neigh.Conn)
 	}
@@ -207,7 +216,7 @@ func (o *Overlay) listenForNewNeighbors(handleNewPacket func(p packets.PacketI, 
 			op := packets.OverlayPacket{}
 			op.Decode(buf[:nBytes])
 			hp := op.InnerPacket().(*hello.HelloOverlayPacket)
-			o.rttLock.Lock()
+			o.RttLock.Lock()
 			lad, _ := net.ResolveUDPAddr("udp", o.LocalAddr+":"+fmt.Sprint(o.basePort-4))
 			listenningConn, _ := net.ListenUDP("udp", lad)
 			wad, _ := net.ResolveUDPAddr("udp", hp.LocalAddr+":"+fmt.Sprint(o.basePort-4))

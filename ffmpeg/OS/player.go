@@ -25,7 +25,7 @@ func NewPlayer(sdp_file_path string, logger *log.Logger, debug bool) *Player {
 	} else {
 		loglevel = "level+24"
 	}
-	cmd := exec.Command("ffplay", sdp_file_path, "-hide_banner", "-loglevel", loglevel, "-protocol_whitelist", "file,rtp,udp")
+	cmd := exec.Command("ffplay", sdp_file_path, "-hide_banner", "-loglevel", loglevel, "-protocol_whitelist", "file,rtp,udp", "-fflags", "nobuffer", "-flags", "low_delay", "-framedrop", "-strict" ,"experimental", "-probesize", "32", "-analyzeduration", "0")
 	logger.Printf("Starting ffplay with command: %s\n", cmd.String())
 	//handle error
 	errorPipe, _ := cmd.StderrPipe()

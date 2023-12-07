@@ -38,17 +38,17 @@ func (rp *OverlayRP) drawGraph(g graph.Graph[string, string]) {
 
 func (rp *OverlayRP) copyGraph(g graph.Graph[string, string]) graph.Graph[string, string] {
 	graph_copy := graph.New[string, string](graph.StringHash, graph.Weighted())
-	rp.nodesLock.RLock()
+	rp.mainLock.RLock()
 	graph_copy.AddVerticesFrom(g)
 	graph_copy.AddEdgesFrom(g)
-	rp.nodesLock.RUnlock()
+	rp.mainLock.RUnlock()
 	return graph_copy
 }
 
 func (rp *OverlayRP) generatePathsForStream(as *availableStream) {
 	as.mstreelock.Lock()
 	graph_copy := rp.copyGraph(rp.overlayTree)
-	rp.nodesLock.RLock()
+	rp.mainLock.RLock()
 	requesters := as.requesters
 	for _, requester := range requesters {
 		graph_copy.AddVertex(requester.node.Addr)
@@ -57,7 +57,7 @@ func (rp *OverlayRP) generatePathsForStream(as *availableStream) {
 			rp.logger.Println("Error adding edge", err)
 		}
 	}
-	rp.nodesLock.RUnlock()
+	rp.mainLock.RUnlock()
 	as.mstree, _ = graph.MinimumSpanningTree[string,string](graph_copy)
 	rp.drawGraph(as.mstree)
 	for _, requester := range requesters {

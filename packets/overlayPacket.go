@@ -11,6 +11,9 @@ import (
 	"main/packets/ready"
 	"main/packets/redirects"
 	"main/packets/requeststream"
+	"main/packets/rtt"
+	"main/packets/startstream"
+	"main/packets/nolonguer"
 )
 
 const (
@@ -28,6 +31,12 @@ const (
 	OverlayPacketTypeRedirectsResponse
 	OverlayPacketTypeReady
 	OverlayPacketTypeReadyResponse
+	OverlayPacketTypeRtt
+	OverlayPacketTypeRttResponse
+	OverlayPacketTypeStartStream
+	OverlayPacketTypeStartStreamResponse
+	OverlayPacketTypeNoLonguerAvailable
+	OverlayPacketTypeNoLonguerInterested
 )
 
 type PacketI interface {
@@ -71,6 +80,18 @@ func NewOverlayPacket(d PacketI) *OverlayPacket {
 		p.T = OverlayPacketTypeReady
 	case *ready.ReadyResponsePacket:
 		p.T = OverlayPacketTypeReadyResponse
+	case *rtt.RttPacket:
+		p.T = OverlayPacketTypeRtt
+	case *rtt.RttResponsePacket:
+		p.T = OverlayPacketTypeRttResponse
+	case *startstream.StartStreamPacket:
+		p.T = OverlayPacketTypeStartStream
+	case *startstream.StartStreamResponsePacket:
+		p.T = OverlayPacketTypeStartStreamResponse
+	case *nolonguer.NoLonguerAvailablePacket:
+		p.T = OverlayPacketTypeNoLonguerAvailable
+	case *nolonguer.NoLonguerInterestedPacket:
+		p.T = OverlayPacketTypeNoLonguerInterested
 	}
 	p.D = d.Encode()
 	return &p
@@ -125,6 +146,18 @@ func (p *OverlayPacket) InnerPacket() PacketI {
 		packet = new(ready.ReadyPacket)
 	case OverlayPacketTypeReadyResponse:
 		packet = new(ready.ReadyResponsePacket)
+	case OverlayPacketTypeRtt:
+		packet = new(rtt.RttPacket)
+	case OverlayPacketTypeRttResponse:
+		packet = new(rtt.RttResponsePacket)
+	case OverlayPacketTypeStartStream:
+		packet = new(startstream.StartStreamPacket)
+	case OverlayPacketTypeStartStreamResponse:
+		packet = new(startstream.StartStreamResponsePacket)
+	case OverlayPacketTypeNoLonguerAvailable:
+		packet = new(nolonguer.NoLonguerAvailablePacket)
+	case OverlayPacketTypeNoLonguerInterested:
+		packet = new(nolonguer.NoLonguerInterestedPacket)
 	}
 	packet.Decode(p.D)
 	return packet

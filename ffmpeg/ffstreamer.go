@@ -42,12 +42,12 @@ func NewFFStreamer(basePort int, logger *log.Logger, streamer_name string, rp st
 	return ffs
 }
 
-func (ffs *FFStreamer) AddStream(path string, name string) {
+func (ffs *FFStreamer) AddStream(path string, name string, startAtSeconds int64) {
 	ports := shared.GetPorts(ffs.basePort)
 	sdp_string := OS.Generate_SDP_From_FFMPEG(path)
 	ffs.lock.Lock()
 	defer ffs.lock.Unlock()
-	ffs.instances[name] = new_streamInstance(name, path, sdp_string, ports, ffs.logger)
+	ffs.instances[name] = new_streamInstance(name, path, sdp_string, ports, startAtSeconds, ffs.logger)
 	for i := 0; i < 4; i++ {
 		go func(name string, i int) {
 			for {
@@ -77,12 +77,12 @@ func (ffs *FFStreamer) RemoveStream(file_name string) {
 	}
 }
 
-func new_streamInstance(name string, media_path string, SDP_string string, ports []int, logger *log.Logger) *streamInstance {
+func new_streamInstance(name string, media_path string, SDP_string string, ports []int, startAtSeconds int64, logger *log.Logger) *streamInstance {
 	si := new(streamInstance)
 	si.sdp_string = SDP_string
 	si.name = name
 	si.conns = make([]*net.UDPConn, 4)
-	si.ffmpeg = OS.NewStreamer(media_path, logger, false, ports)
+	si.ffmpeg = OS.NewStreamer(media_path, logger, false, ports, startAtSeconds)
 	for i := 0; i < 4; i++ {
 		remoteAddr, _ := net.ResolveUDPAddr("udp", ":"+fmt.Sprint(ports[i]))
 		conn, err := net.ListenUDP("udp", remoteAddr)
@@ -135,7 +135,7 @@ func (ffs *FFStreamer) ShellAddStream(args []string) {
 	}
 	file_name := args[0]
 	stream_name := args[1]
-	ffs.AddStream(file_name, stream_name)
+	ffs.AddStream(file_name, stream_name, 0)
 }
 
 func (ffs *FFStreamer) ShellRemoveStream(args []string) {

@@ -41,12 +41,12 @@ func Generate_SDP_From_FFMPEG(input string) string {
 	return SDP_string
 }
 
-func NewStreamer(media_path string, logger *log.Logger, debug bool, ports []int) *Streamer {
+func NewStreamer(media_path string, logger *log.Logger, debug bool, ports []int, startAtSeconds int64) *Streamer {
 	s := new(Streamer)
 	s.media_path = media_path
 	s.logger = logger
 	s.debug = debug
-	cmd := get_streaming_command(media_path, ports)
+	cmd := get_streaming_command(media_path, ports, startAtSeconds)
 	s.logger.Printf("Starting STREAMER with command: %s\n", cmd.String())
 	//handle error
 	errorPipe, _ := cmd.StderrPipe()

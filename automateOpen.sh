@@ -21,7 +21,7 @@ do
     sleep 0.5
 done
 
-for i in {1..2}
+for i in {1..23}
 do
     kitty --hold docker exec -it core vcmd -c /tmp/pycore.1/C$i -- su grk -s /bin/bash -c "cd /src/ESR && clear && ./programs/OverlayClient/Client -n C$i" &
     sleep 0.5

@@ -24,7 +24,7 @@ func (rp *OverlayRP) listStreams(args []string) {
 		for host := range stream.hosts {
 			hosts = append(hosts, host)
 		}
-		rp.logger.Printf("Stream %s: %v\n", stream.name, hosts)
+		rp.logger.Printf("Stream %s: %v Requesters: %v\n", stream.name, hosts, stream.requesters)
 	}
 }
 
