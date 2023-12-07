@@ -427,6 +427,7 @@ func (rp *OverlayRP) stopStream(as *availableStream) {
 	as.running = false
 	rp.writeToServer(as.pickedHost, nolonguer.NewNoLonguerInterestedPacket(as.name, ""))
 	as.pickedHost = ""
+	as.startTime = time.Unix(0, 0)
 }
 
 func (rp *OverlayRP) reconfigureOverlayWithRedirects(as *availableStream) {
